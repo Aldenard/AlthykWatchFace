@@ -23,12 +23,14 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
+    private static final String TAG = "Althyk";
 
     /**
      * Update rate in milliseconds for interactive mode
      * We update once a second to advance the second hand.
      */
-    private static final long INTERACTIVE_UPDATE_RATE_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final long INTERACTIVE_UPDATE_RATE_MS = 8750; // 3 [minutes in ET] = 8750 [msec]
+    private static final long INTERACTIVE_UPDATE_RATE_CHILD_MS = 2917; // 2917 + 2917 + 2916 = 8750
 
     private static final double L_E_TIME_RATE = 3600.0 / 175;
 
@@ -71,8 +73,9 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
                         invalidate();
                         if (shouldTimerBeRunning()) {
                             long timeMs = System.currentTimeMillis();
-                            long delayMs = INTERACTIVE_UPDATE_RATE_MS
-                                    - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
+                            long delayMs = INTERACTIVE_UPDATE_RATE_CHILD_MS
+                                    - ((timeMs % INTERACTIVE_UPDATE_RATE_MS) %
+                                    INTERACTIVE_UPDATE_RATE_CHILD_MS);
                             mUpdateTimeHandler
                                     .sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
                         }
