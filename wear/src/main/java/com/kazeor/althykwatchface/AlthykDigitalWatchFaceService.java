@@ -191,9 +191,12 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
 
             int width = bounds.width();
             int height = bounds.height();
-            float qY = height / 4f;
+            int cardHeight = getPeekCardPosition().height();
+            boolean shouldTimerBeRunning = shouldTimerBeRunning();
+
+            float qY = shouldTimerBeRunning ? (height - cardHeight) / 4f : height / 4f;
             float centerX = bounds.exactCenterX();
-            float centerY = bounds.exactCenterY();
+            float centerY = shouldTimerBeRunning ? (height - cardHeight) / 2f : height / 2f;
 
             // draw background
             canvas.drawRect(0, 0, width, height, mBackgroundPaint);
@@ -203,19 +206,25 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             float ltY = qY + mLTTextHeight / 2f;
             canvas.drawText(ltString, ltX, ltY, mLTPaint);
 
-            if (shouldTimerBeRunning()) {
+            if (shouldTimerBeRunning) {
                 long etMinute = (long) Math.floor(etMillis / 60000) % 60; // 1000 * 60
                 long etHour = (long) Math.floor(etMillis / 3600000) % 24; // 1000 * 60 * 60
                 String etString = String.format("%02d:%02d", etHour, etMinute);
 
                 // draw ET
                 float etX = centerX - mETTextWidth / 2f;
-                float etY = height - qY + mETTextHeight /2f;
+                float etY = centerY + qY + mETTextHeight /2f;
                 canvas.drawText(etString, etX, etY, mETPaint);
 
                 // center line
                 canvas.drawLine(0, centerY, width, centerY, mLinePaint);
             }
+        }
+
+        @Override
+        public void onPeekCardPositionUpdate(Rect rect) {
+            super.onPeekCardPositionUpdate(rect);
+            invalidate();
         }
 
         @Override
