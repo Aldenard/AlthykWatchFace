@@ -23,12 +23,14 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
+    private static final String TAG = "Althyk";
 
     /**
      * Update rate in milliseconds for interactive mode
      * We update once a second to advance the second hand.
      */
-    private static final long INTERACTIVE_UPDATE_RATE_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final long INTERACTIVE_UPDATE_RATE_MS = 8750; // 3 [minutes in ET] = 8750 [msec]
+    private static final long INTERACTIVE_UPDATE_RATE_CHILD_MS = 2917; // 2917 + 2917 + 2916 = 8750
 
     private static final double L_E_TIME_RATE = 3600.0 / 175;
 
@@ -46,7 +48,6 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
         static final int MSG_UPDATE_TIME = 0;
 
         Time mTime;
-        Time mETime;
 
         /* device feature */
         boolean mLowBitAmbient;
@@ -54,10 +55,11 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
 
         /* graphic objects */
         Paint mBackgroundPaint;
-        Paint mDebugPaint;
+        Paint mLinePaint;
         Paint mLTPaint = new Paint();
         Paint mETPaint = new Paint();
-        float mYOffset;
+        float mLTTextWidth, mLTTextHeight;
+        float mETTextWidth, mETTextHeight;
 
         /**
          * The system notifies the watch face once a minute when the time changes.
@@ -71,8 +73,9 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
                         invalidate();
                         if (shouldTimerBeRunning()) {
                             long timeMs = System.currentTimeMillis();
-                            long delayMs = INTERACTIVE_UPDATE_RATE_MS
-                                    - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
+                            long delayMs = INTERACTIVE_UPDATE_RATE_CHILD_MS
+                                    - ((timeMs % INTERACTIVE_UPDATE_RATE_MS) %
+                                    INTERACTIVE_UPDATE_RATE_CHILD_MS);
                             mUpdateTimeHandler
                                     .sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
                         }
@@ -106,12 +109,12 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setARGB(255, 0, 0, 0);
 
-            mDebugPaint = new Paint();
-            mDebugPaint.setARGB(255, 255, 255, 255);
+            mLinePaint = new Paint();
+            mLinePaint.setARGB(255, 255, 255, 255);
 
             mLTPaint = new Paint();
             mLTPaint.setARGB(255, 255, 255, 255);
-            mLTPaint.setTypeface(BOLD_TYPEFACE);
+            mLTPaint.setTypeface(NORMAL_TYPEFACE);
             mLTPaint.setAntiAlias(true);
 
             mETPaint = new Paint();
@@ -119,10 +122,10 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             mETPaint.setTypeface(NORMAL_TYPEFACE);
             mETPaint.setAntiAlias(true);
 
+            updateFontMetrics();
+
             /* allocate an object to hold the time*/
             mTime = new Time();
-            mETime = new Time();
-            mETime.clear("UTC");
         }
 
         @Override
@@ -144,6 +147,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
 
             mLTPaint.setTextSize(textSize);
             mETPaint.setTextSize(textSize);
+            updateFontMetrics();
         }
 
         @Override
@@ -170,6 +174,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
                 boolean antiAlias = !inAmbientMode;
                 mLTPaint.setAntiAlias(antiAlias);
                 mETPaint.setAntiAlias(antiAlias);
+                updateFontMetrics();
             }
 
             invalidate();
@@ -180,33 +185,46 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
         public void onDraw(Canvas canvas, Rect bounds) {
             /* update the time */
             mTime.setToNow();
-            double etMillis = mTime.toMillis(true) * L_E_TIME_RATE;
-            //double etMillis = System.currentTimeMillis() * L_E_TIME_RATE;
-            long etMinute = (long)Math.floor(etMillis / 60000) % 60; // 1000 * 60
-            long etHour = (long)Math.floor(etMillis / 3600000) % 24; // 1000 * 60 * 60
-            String ltString = String.format("%02d:%02d", mTime.hour, mTime.minute);
-            String etString = String.format("%02d:%02d", etHour, etMinute);
+            double etMillis = System.currentTimeMillis() * L_E_TIME_RATE;
 
-            //Log.d("Althyk", ltString + " > " + etString);
+            String ltString = String.format("%02d:%02d", mTime.hour, mTime.minute);
 
             int width = bounds.width();
             int height = bounds.height();
+            int cardHeight = getPeekCardPosition().height();
+            boolean shouldTimerBeRunning = shouldTimerBeRunning();
+
+            float qY = shouldTimerBeRunning ? (height - cardHeight) / 4f : height / 4f;
+            float centerX = bounds.exactCenterX();
+            float centerY = shouldTimerBeRunning ? (height - cardHeight) / 2f : height / 2f;
 
             // draw background
             canvas.drawRect(0, 0, width, height, mBackgroundPaint);
 
             // draw LT
-            float ltX = (width - mLTPaint.measureText(ltString)) / 2f;
-            canvas.drawText(ltString, ltX, height / 2, mLTPaint);
+            float ltX = centerX - mLTTextWidth / 2f;
+            float ltY = qY + mLTTextHeight / 2f;
+            canvas.drawText(ltString, ltX, ltY, mLTPaint);
 
-            // draw ET
-            Rect result = new Rect();
-            mETPaint.getTextBounds(etString, 0, etString.length(), result);
-            canvas.drawText(
-                    etString,
-                    (width - result.width()) / 2f,
-                    height / 2 + result.height(),
-                    mETPaint);
+            if (shouldTimerBeRunning) {
+                long etMinute = (long) Math.floor(etMillis / 60000) % 60; // 1000 * 60
+                long etHour = (long) Math.floor(etMillis / 3600000) % 24; // 1000 * 60 * 60
+                String etString = String.format("%02d:%02d", etHour, etMinute);
+
+                // draw ET
+                float etX = centerX - mETTextWidth / 2f;
+                float etY = centerY + qY + mETTextHeight /2f;
+                canvas.drawText(etString, etX, etY, mETPaint);
+
+                // center line
+                canvas.drawLine(0, centerY, width, centerY, mLinePaint);
+            }
+        }
+
+        @Override
+        public void onPeekCardPositionUpdate(Rect rect) {
+            super.onPeekCardPositionUpdate(rect);
+            invalidate();
         }
 
         @Override
@@ -216,7 +234,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             if (visible) {
                 registerReceiver();
 
-                // Update time zone in case it chagned while we weren't visible
+                // Update time zone in case it changed while we weren't visible
                 mTime.clear(TimeZone.getDefault().getID());
                 mTime.setToNow();
             } else {
@@ -224,6 +242,17 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             }
 
             updateTimer();
+        }
+
+        private void updateFontMetrics() {
+            Rect result = new Rect();
+            mLTPaint.getTextBounds("00:00", 0, 5, result);
+            mLTTextHeight = result.height();
+            mLTTextWidth = mLTPaint.measureText("00:00");
+
+            mETPaint.getTextBounds("00:00", 0, 5, result);
+            mETTextHeight = result.height();
+            mETTextWidth = mETPaint.measureText("00:00");
         }
 
         private void registerReceiver() {
