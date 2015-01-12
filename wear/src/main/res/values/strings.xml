@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">AlthykWatchFace</string>
     <string name="digital_name">Althyk Digital</string>
+    <string name="analog_name">Althyk Analog</string>
 </resources>
