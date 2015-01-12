@@ -23,7 +23,7 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
-    private static final String TAG = "Althyk";
+    private static final String TAG = "AlthykD";
 
     /**
      * Update rate in milliseconds for interactive mode
