@@ -284,7 +284,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 float outerX = (float) Math.sin(tickRot) * etOuterTickRadius;
                 float outerY = (float) -Math.cos(tickRot) * etOuterTickRadius;
 
-                long hour = etHour + etTickIndex + 1;
+                long hour = etHour + etTickIndex;
                 if (etTickIndex != 0 && hour % 8 != 0) {
                     canvas.drawLine(centerX + innerX, centerY + innerY,
                             centerX + outerX, centerY + outerY, mETTickPaint);
