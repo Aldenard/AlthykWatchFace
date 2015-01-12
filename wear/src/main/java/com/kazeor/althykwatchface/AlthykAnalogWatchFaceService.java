@@ -61,7 +61,6 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         Paint mBackgroundPaint;
         Paint mHourPaint;
         Paint mMinutePaint;
-        Paint mSecondPaint;
         Paint mTickPaint;
         Paint mETTickPaint;
         Paint mAccentETTickPaint;
@@ -122,12 +121,6 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             mMinutePaint.setStrokeWidth(3.f);
             mMinutePaint.setAntiAlias(true);
             mMinutePaint.setStrokeCap(Paint.Cap.ROUND);
-
-            mSecondPaint = new Paint();
-            mSecondPaint.setARGB(255, 255, 0, 0);
-            mSecondPaint.setStrokeWidth(2.f);
-            mSecondPaint.setAntiAlias(true);
-            mSecondPaint.setStrokeCap(Paint.Cap.ROUND);
 
             mTickPaint = new Paint();
             mTickPaint.setARGB(255, 128, 128, 128);
@@ -207,7 +200,6 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 boolean antiAlias = !inAmbientMode;
                 mHourPaint.setAntiAlias(antiAlias);
                 mMinutePaint.setAntiAlias(antiAlias);
-                mSecondPaint.setAntiAlias(antiAlias);
                 mTickPaint.setAntiAlias(antiAlias);
                 mETTickPaint.setAntiAlias(antiAlias);
                 mAccentETTickPaint.setAntiAlias(antiAlias);
