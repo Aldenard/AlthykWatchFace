@@ -66,6 +66,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         Paint mETTickPaint;
         Paint mAccentETTickPaint;
         Paint mCirclePaint;
+        Paint mAmbientCirclePaint;
         Paint mTextPaint = new Paint();
 
         /** Handler to update the time once a second in interactive mode. */
@@ -144,12 +145,17 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             mAccentETTickPaint.setAntiAlias(true);
 
             mCirclePaint = new Paint();
-            mCirclePaint.setARGB(250, 255, 255, 255);
             mCirclePaint.setStrokeWidth(10.f);
             mCirclePaint.setAntiAlias(true);
             mCirclePaint.setStyle(Paint.Style.STROKE);
             mCirclePaint.setShader(new SweepGradient(0, 0,
                     Color.argb(255, 0, 255, 0), Color.argb(0, 0, 255, 0)));
+
+            mAmbientCirclePaint = new Paint();
+            mAmbientCirclePaint.setARGB(255, 255, 255, 255);
+            mAmbientCirclePaint.setStrokeWidth(1.f);
+            mAmbientCirclePaint.setAntiAlias(false);
+            mAmbientCirclePaint.setStyle(Paint.Style.STROKE);
 
             mTextPaint = new Paint();
             mTextPaint.setARGB(255, 255, 255, 255);
@@ -206,6 +212,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 mETTickPaint.setAntiAlias(antiAlias);
                 mAccentETTickPaint.setAntiAlias(antiAlias);
                 mCirclePaint.setAntiAlias(antiAlias);
+                mAmbientCirclePaint.setAntiAlias(antiAlias);
             }
 
             invalidate();
@@ -262,17 +269,19 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
 
             // Draw the circle
             double etMillis = millis * L_E_TIME_RATE;
-            long etHour = (long) Math.floor(etMillis / 3600000) % 24; // 1000 * 60 * 60
             long prevETTickMS = millis - (millis % ET_HOUR_IN_LT_MS);
             double startRad = (prevETTickMS % LT_HOUR_IN_LT_MS) * LT_MS_IN_RAD;
-            canvas.save(Canvas.MATRIX_SAVE_FLAG);
-            canvas.translate(centerX, centerY);
-            canvas.rotate((float) (startRad * 180 / Math.PI) - 90f);
-            canvas.drawArc(-centerX + 15, -centerY + 15, centerX - 15, centerY - 15,
-                    0, 360f, false, mCirclePaint);
-            canvas.restore();
+            if (shouldTimerBeRunning()) {
+                canvas.save(Canvas.MATRIX_SAVE_FLAG);
+                canvas.translate(centerX, centerY);
+                canvas.rotate((float) (startRad * 180 / Math.PI) - 90f);
+                canvas.drawArc(-centerX + 15, -centerY + 15, centerX - 15, centerY - 15,
+                        0, 360f, false, mCirclePaint);
+                canvas.restore();
+            }
 
             // Draw the ET ticks.
+            long etHour = (long) Math.floor(etMillis / 3600000) % 24; // 1000 * 60 * 60
             float etTextRadius = centerX - 35;
             float etInnerTickRadius = centerX - 20;
             float etOuterTickRadius = centerX - 10;
