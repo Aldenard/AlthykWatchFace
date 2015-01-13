@@ -32,6 +32,8 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = 8750; // 3 [minutes in ET] = 8750 [msec]
     private static final long INTERACTIVE_UPDATE_RATE_CHILD_MS = 2917; // 2917 + 2917 + 2916 = 8750
+    private static final long ANIMATION_DURATION = 500;
+    private static final long ANIMATION_UPDATE_RATE = TimeUnit.SECONDS.toMillis(1) / 30; // 30fps
 
     private static final double L_E_TIME_RATE = 3600.0 / 175;
 
@@ -47,6 +49,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
 
     private class Engine extends CanvasWatchFaceService.Engine {
         static final int MSG_UPDATE_TIME = 0;
+        static final int MSG_UPDATE_ANIMATION = 1;
 
         Time mTime;
 
@@ -61,6 +64,10 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
         Paint mETPaint = new Paint();
         float mLTTextWidth, mLTTextHeight;
         float mETTextWidth, mETTextHeight;
+
+        /* animation */
+        long mAnimationStart;
+        float mAnimationValue = 1f;
 
         /**
          * The system notifies the watch face once a minute when the time changes.
@@ -79,6 +86,21 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
                                     INTERACTIVE_UPDATE_RATE_CHILD_MS);
                             mUpdateTimeHandler
                                     .sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
+                        }
+                        break;
+                    case MSG_UPDATE_ANIMATION:
+                        invalidate();
+                        if (shouldTimerBeRunning()) {
+                            long diffMs = System.currentTimeMillis() - mAnimationStart;
+                            if (diffMs < ANIMATION_DURATION) {
+                                long delayMs = ANIMATION_UPDATE_RATE -
+                                        diffMs % ANIMATION_UPDATE_RATE;
+                                float t = (float) diffMs / ANIMATION_DURATION;
+                                mAnimationValue = t * (2f -  t);
+                                mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_ANIMATION, delayMs);
+                            } else {
+                                mAnimationValue = 1f;
+                            }
                         }
                         break;
                 }
@@ -184,6 +206,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
 
             invalidate();
             updateTimer();
+            updateAnimation();
         }
 
         @Override
@@ -222,7 +245,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
                 canvas.drawText(etString, etX, etY, mETPaint);
 
                 // center line
-                canvas.drawLine(0, centerY, width, centerY, mLinePaint);
+                canvas.drawLine(0, centerY, width * mAnimationValue, centerY, mLinePaint);
             }
         }
 
@@ -275,6 +298,15 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             }
             mRegisteredTimeZoneReceiver = false;
             AlthykDigitalWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
+        }
+
+        private void updateAnimation() {
+            mUpdateTimeHandler.removeMessages(MSG_UPDATE_ANIMATION);
+            if (shouldTimerBeRunning()) {
+                mAnimationStart = System.currentTimeMillis();
+                mAnimationValue = 0f;
+                mUpdateTimeHandler.sendEmptyMessage(MSG_UPDATE_ANIMATION);
+            }
         }
 
         /**
