@@ -33,6 +33,8 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
      * We update once a second to advance the second hand.
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final long ANIMATION_DURATION = TimeUnit.SECONDS.toMillis(1);
+    private static final long ANIMATION_UPDATE_RATE = TimeUnit.SECONDS.toMillis(1) / 30;
 
     private static final double L_E_TIME_RATE = 3600.0 / 175;
     private static final double LT_MS_IN_RAD = 2 * Math.PI / (1000 * 60 * 60);
@@ -51,6 +53,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
 
     private class Engine extends CanvasWatchFaceService.Engine {
         static final int MSG_UPDATE_TIME = 0;
+        static final int MSG_UPDATE_ANIMATION = 1;
 
         Time mTime;
 
@@ -69,6 +72,10 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         Paint mAmbientCirclePaint;
         Paint mTextPaint = new Paint();
 
+        /* animation */
+        long mAnimationStart;
+        float mAnimationValue;
+
         /** Handler to update the time once a second in interactive mode. */
         final Handler mUpdateTimeHandler = new Handler() {
             @Override
@@ -81,6 +88,20 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                             long delayMs = INTERACTIVE_UPDATE_RATE_MS
                                     - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
                             mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
+                        }
+                        break;
+                    case MSG_UPDATE_ANIMATION:
+                        invalidate();
+                        if (shouldTimerBeRunning()) {
+                            long diffMs = System.currentTimeMillis() - mAnimationStart;
+                            if (diffMs < ANIMATION_DURATION) {
+                                long delayMs = ANIMATION_UPDATE_RATE -
+                                        diffMs % ANIMATION_UPDATE_RATE;
+                                mAnimationValue = (float) diffMs / ANIMATION_DURATION;
+                                mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_ANIMATION, delayMs);
+                            } else {
+                                mAnimationValue = 1f;
+                            }
                         }
                         break;
                 }
@@ -217,6 +238,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             // Whether the timer should be running depends on whether we're in ambient mode (as well
             // as whether we're visible), so we may need to start or stop the timer.
             updateTimer();
+            updateAnimation();
         }
 
         @Override
@@ -273,7 +295,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 canvas.translate(centerX, centerY);
                 canvas.rotate((float) (startRad * 180 / Math.PI) - 90f);
                 canvas.drawArc(-centerX + 15, -centerY + 15, centerX - 15, centerY - 15,
-                        0, 360f, false, mCirclePaint);
+                        0, 360f * mAnimationValue, false, mCirclePaint);
                 canvas.restore();
             }
 
@@ -330,6 +352,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             // Whether the timer should be running depends on whether we're visible (as well as
             // whether we're in ambient mode), so we may need to start or stop the timer.
             updateTimer();
+            updateAnimation();
         }
 
         private void registerReceiver() {
@@ -347,6 +370,15 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             }
             mRegisteredTimeZoneReceiver = false;
             AlthykAnalogWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
+        }
+
+        private void updateAnimation() {
+            mUpdateTimeHandler.removeMessages(MSG_UPDATE_ANIMATION);
+            if (shouldTimerBeRunning()) {
+                mAnimationStart = System.currentTimeMillis();
+                mAnimationValue = 0f;
+                mUpdateTimeHandler.sendEmptyMessage(MSG_UPDATE_ANIMATION);
+            }
         }
 
         /**
