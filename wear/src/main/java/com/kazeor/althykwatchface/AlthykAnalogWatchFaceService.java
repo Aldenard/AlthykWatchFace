@@ -18,6 +18,7 @@ import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
@@ -104,6 +105,10 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
+                    .setStatusBarGravity(Gravity.TOP | Gravity.LEFT)
+                    .setHotwordIndicatorGravity(Gravity.CENTER)
+                    .setViewProtection(WatchFaceStyle.PROTECT_STATUS_BAR |
+                            WatchFaceStyle.PROTECT_HOTWORD_INDICATOR)
                     .build());
 
             /* create graphic style */
