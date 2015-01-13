@@ -32,8 +32,8 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = 8750; // 3 [minutes in ET] = 8750 [msec]
     private static final long INTERACTIVE_UPDATE_RATE_CHILD_MS = 2917; // 2917 + 2917 + 2916 = 8750
-    private static final long ANIMATION_DURATION = TimeUnit.SECONDS.toMillis(1);
-    private static final long ANIMATION_UPDATE_RATE = TimeUnit.SECONDS.toMillis(1) / 30;
+    private static final long ANIMATION_DURATION = 500;
+    private static final long ANIMATION_UPDATE_RATE = TimeUnit.SECONDS.toMillis(1) / 30; // 30fps
 
     private static final double L_E_TIME_RATE = 3600.0 / 175;
 
@@ -95,7 +95,8 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
                             if (diffMs < ANIMATION_DURATION) {
                                 long delayMs = ANIMATION_UPDATE_RATE -
                                         diffMs % ANIMATION_UPDATE_RATE;
-                                mAnimationValue = (float) diffMs / ANIMATION_DURATION;
+                                float t = (float) diffMs / ANIMATION_DURATION;
+                                mAnimationValue = t * (2f -  t);
                                 mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_ANIMATION, delayMs);
                             } else {
                                 mAnimationValue = 1f;
