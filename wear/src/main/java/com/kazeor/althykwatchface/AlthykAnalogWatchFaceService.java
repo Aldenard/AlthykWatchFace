@@ -74,7 +74,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
 
         /* animation */
         long mAnimationStart;
-        float mAnimationValue;
+        float mAnimationValue = 1f;
 
         /** Handler to update the time once a second in interactive mode. */
         final Handler mUpdateTimeHandler = new Handler() {
@@ -353,7 +353,6 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             // Whether the timer should be running depends on whether we're visible (as well as
             // whether we're in ambient mode), so we may need to start or stop the timer.
             updateTimer();
-            updateAnimation();
         }
 
         private void registerReceiver() {

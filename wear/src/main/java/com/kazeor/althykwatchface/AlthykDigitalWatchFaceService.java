@@ -67,7 +67,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
 
         /* animation */
         long mAnimationStart;
-        float mAnimationValue;
+        float mAnimationValue = 1f;
 
         /**
          * The system notifies the watch face once a minute when the time changes.
@@ -270,7 +270,6 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             }
 
             updateTimer();
-            updateAnimation();
         }
 
         private void updateFontMetrics() {
