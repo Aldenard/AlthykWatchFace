@@ -1,4 +1,4 @@
-package com.kazeor.althykwatchface;
+package com.althyk.watchface;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -16,7 +16,6 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;

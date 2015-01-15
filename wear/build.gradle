@@ -6,7 +6,7 @@ android {
     buildToolsVersion "21.1.2"
 
     defaultConfig {
-        applicationId "com.kazeor.althykwatchface"
+        applicationId "com.althyk.watchface"
         minSdkVersion 21
         targetSdkVersion 21
         versionCode 1

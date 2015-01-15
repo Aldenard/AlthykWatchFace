@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.kazeor.althykwatchface">
+    package="com.althyk.watchface">
 
     <uses-permission android:name="com.google.android.permission.PROVIDE_BACKGROUND" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -13,7 +13,7 @@
         android:theme="@android:style/Theme.DeviceDefault">
 
         <service
-            android:name=".AlthykDigitalWatchFaceService"
+            android:name="com.althyk.watchface.AlthykDigitalWatchFaceService"
             android:label="@string/digital_name"
             android:allowEmbedded="true"
             android:taskAffinity=""
@@ -35,7 +35,7 @@
         </service>
 
         <service
-            android:name=".AlthykAnalogWatchFaceService"
+            android:name="com.althyk.watchface.AlthykAnalogWatchFaceService"
             android:label="@string/analog_name"
             android:allowEmbedded="true"
             android:taskAffinity=""
