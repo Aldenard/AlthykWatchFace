@@ -1,4 +1,4 @@
-package com.kazeor.althykwatchface;
+package com.althyk.watchface;
 
 
 import android.content.BroadcastReceiver;
