@@ -69,8 +69,20 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         Paint mETTickPaint;
         Paint mAccentETTickPaint;
         Paint mCirclePaint;
-        Paint mAmbientCirclePaint;
+        Paint mCircleDimPaint;
+        Paint mCircleDimInvPaint;
         Paint mTextPaint = new Paint();
+
+        int[] mColors = {
+                Color.parseColor("#5062a6"),
+                Color.parseColor("#3386bd"),
+                Color.parseColor("#43c2e8"),
+                Color.parseColor("#ffe98c"),
+                Color.parseColor("#e09f57"),
+                Color.parseColor("#b36679"),
+                Color.parseColor("#5062a6"),
+        };
+        float[] mPositions = {0f, 5 / 24f, 7 / 24f, 0.5f, 17 / 24f, 19 / 24f, 1f};
 
         /* animation */
         long mAnimationStart;
@@ -168,14 +180,25 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             mCirclePaint.setStrokeWidth(10.f);
             mCirclePaint.setAntiAlias(true);
             mCirclePaint.setStyle(Paint.Style.STROKE);
-            mCirclePaint.setShader(new SweepGradient(0, 0,
-                    Color.argb(255, 0, 255, 0), Color.argb(0, 0, 255, 0)));
+            mCirclePaint.setShader(new SweepGradient(0, 0, mColors, mPositions));
 
-            mAmbientCirclePaint = new Paint();
-            mAmbientCirclePaint.setARGB(255, 255, 255, 255);
-            mAmbientCirclePaint.setStrokeWidth(1.f);
-            mAmbientCirclePaint.setAntiAlias(false);
-            mAmbientCirclePaint.setStyle(Paint.Style.STROKE);
+            int[] colors = {
+                    Color.argb(0, 0, 0, 0),
+                    Color.argb(0, 0, 0, 0),
+                    Color.argb(255, 0, 0, 0)
+            };
+            float[] positions = {0.f, 0.7f, 1.f};
+            mCircleDimPaint = new Paint();
+            mCircleDimPaint.setStrokeWidth(12.f);
+            mCircleDimPaint.setAntiAlias(true);
+            mCircleDimPaint.setStyle(Paint.Style.STROKE);
+            mCircleDimPaint.setShader(new SweepGradient(0, 0, colors, positions));
+
+            mCircleDimInvPaint = new Paint();
+            mCircleDimInvPaint.setStrokeWidth(12.f);
+            mCircleDimInvPaint.setAntiAlias(true);
+            mCircleDimInvPaint.setStyle(Paint.Style.STROKE);
+            mCircleDimInvPaint.setARGB(255, 0, 0, 0);
 
             mTextPaint = new Paint();
             mTextPaint.setARGB(255, 255, 255, 255);
@@ -231,7 +254,8 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 mETTickPaint.setAntiAlias(antiAlias);
                 mAccentETTickPaint.setAntiAlias(antiAlias);
                 mCirclePaint.setAntiAlias(antiAlias);
-                mAmbientCirclePaint.setAntiAlias(antiAlias);
+                mCircleDimPaint.setAntiAlias(antiAlias);
+                mCircleDimInvPaint.setAntiAlias(antiAlias);
             }
 
             invalidate();
@@ -271,8 +295,9 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
 
             int second = mTime.second;
             int minutes = mTime.minute;
+            int hour = mTime.hour;
             float minRot = (minutes / 30f  + second / 1800f) * (float) Math.PI;
-            float hrRot = ((mTime.hour + (minutes / 60f)) / 6f) * (float) Math.PI;
+            float hrRot = ((hour + (minutes / 60f)) / 6f) * (float) Math.PI;
 
             float minLength = centerX - 40;
             float hrLength = centerX - 115;
@@ -289,19 +314,30 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
 
             // Draw the circle
             double etMillis = millis * L_E_TIME_RATE;
+            int etHour = (int) Math.floor(etMillis / 3600000) % 24; // 1000 * 60 * 60
             long prevETTickMS = millis - (millis % ET_HOUR_IN_LT_MS);
             double startRad = (prevETTickMS % LT_HOUR_IN_LT_MS) * LT_MS_IN_RAD;
             if (shouldTimerBeRunning()) {
                 canvas.save(Canvas.MATRIX_SAVE_FLAG);
                 canvas.translate(centerX, centerY);
-                canvas.rotate((float) (startRad * 180 / Math.PI) - 90f);
+                canvas.rotate((float) (startRad * 180 / Math.PI) - etHour * 15 - 90f);
                 canvas.drawArc(-centerX + 15, -centerY + 15, centerX - 15, centerY - 15,
-                        0, 360f * mAnimationValue, false, mCirclePaint);
+                        0f, 360f, false, mCirclePaint);
+                canvas.restore();
+
+                // dimming
+                canvas.save(Canvas.MATRIX_SAVE_FLAG);
+                canvas.translate(centerX, centerY);
+                canvas.rotate((float) (startRad * 180 / Math.PI) - 90f);
+                float sweepDegree = 360f * mAnimationValue;
+                canvas.drawArc(-centerX + 15, -centerY + 15, centerX - 15, centerY - 15,
+                        0, sweepDegree, false, mCircleDimPaint);
+                canvas.drawArc(-centerX + 15, -centerY + 15, centerX - 15, centerY - 15,
+                        sweepDegree, 360f - sweepDegree, false, mCircleDimInvPaint);
                 canvas.restore();
             }
 
             // Draw the ET ticks.
-            long etHour = (long) Math.floor(etMillis / 3600000) % 24; // 1000 * 60 * 60
             float etTextRadius = centerX - 35;
             float etInnerTickRadius = centerX - 20;
             float etOuterTickRadius = centerX - 10;
@@ -312,15 +348,15 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 float outerX = (float) Math.sin(tickRot) * etOuterTickRadius;
                 float outerY = (float) -Math.cos(tickRot) * etOuterTickRadius;
 
-                long hour = etHour + etTickIndex;
-                if (etTickIndex != 0 && hour % 8 != 0) {
+                int tickHour = etHour + etTickIndex;
+                if (etTickIndex != 0 && tickHour % 8 != 0) {
                     canvas.drawLine(centerX + innerX, centerY + innerY,
                             centerX + outerX, centerY + outerY, mETTickPaint);
                 } else {
                     canvas.drawLine(centerX + innerX, centerY + innerY,
                             centerX + outerX, centerY + outerY, mAccentETTickPaint);
 
-                    String hourText = (hour % 24) + "";
+                    String hourText = (tickHour % 24) + "";
                     Rect rect = new Rect();
                     mTextPaint.getTextBounds(hourText, 0, hourText.length(), rect);
                     float textX = (float) Math.sin(tickRot) * etTextRadius - rect.width() / 2f;
