@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -64,6 +65,17 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
         Paint mETPaint = new Paint();
         float mLTTextWidth, mLTTextHeight;
         float mETTextWidth, mETTextHeight;
+
+        int[] mColors = {
+                Color.parseColor("#5062a6"),
+                Color.parseColor("#3386bd"),
+                Color.parseColor("#43c2e8"),
+                Color.parseColor("#ffe98c"),
+                Color.parseColor("#e09f57"),
+                Color.parseColor("#b36679"),
+                Color.parseColor("#5062a6"),
+        };
+        float[] mPositions = {0f, 5 / 24f, 7 / 24f, 0.5f, 17 / 24f, 19 / 24f, 1f};
 
         /* animation */
         long mAnimationStart;
@@ -137,7 +149,9 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             mBackgroundPaint.setARGB(255, 0, 0, 0);
 
             mLinePaint = new Paint();
+            mLinePaint.setAntiAlias(true);
             mLinePaint.setARGB(255, 255, 255, 255);
+            mLinePaint.setStrokeWidth(2f);
 
             mLTPaint = new Paint();
             mLTPaint.setARGB(255, 255, 255, 255);
@@ -199,6 +213,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
 
             if (mLowBitAmbient) {
                 boolean antiAlias = !inAmbientMode;
+                mLinePaint.setAntiAlias(antiAlias);
                 mLTPaint.setAntiAlias(antiAlias);
                 mETPaint.setAntiAlias(antiAlias);
                 updateFontMetrics();
@@ -215,8 +230,6 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             mTime.setToNow();
             double etMillis = System.currentTimeMillis() * L_E_TIME_RATE;
 
-            String ltString = String.format("%02d:%02d", mTime.hour, mTime.minute);
-
             int width = bounds.width();
             int height = bounds.height();
             int cardHeight = getPeekCardPosition().height();
@@ -226,8 +239,20 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             float centerX = bounds.exactCenterX();
             float centerY = shouldTimerBeRunning ? (height - cardHeight) / 2f : height / 2f;
 
-            // draw background
-            canvas.drawRect(0, 0, width, height, mBackgroundPaint);
+            // calc LT time
+            int ltHour = mTime.hour;
+            int ltMin = mTime.minute;
+            String ltString = String.format("%02d:%02d", ltHour, ltMin);
+
+            // draw LT background
+            if (shouldTimerBeRunning) {
+                canvas.save();
+                canvas.clipRect(0, 0, width, centerY);
+                canvas.drawColor(calcColor(ltHour, ltMin));
+                canvas.restore();
+            } else {
+                canvas.drawRect(0, 0, width, height, mBackgroundPaint);
+            }
 
             // draw LT
             float ltX = centerX - mLTTextWidth / 2f;
@@ -235,9 +260,16 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             canvas.drawText(ltString, ltX, ltY, mLTPaint);
 
             if (shouldTimerBeRunning) {
-                long etMinute = (long) Math.floor(etMillis / 60000) % 60; // 1000 * 60
-                long etHour = (long) Math.floor(etMillis / 3600000) % 24; // 1000 * 60 * 60
-                String etString = String.format("%02d:%02d", etHour, etMinute);
+                int etHour = (int) Math.floor(etMillis / 3600000) % 24; // 1000 * 60 * 60
+                int etMin = (int) Math.floor(etMillis / 60000) % 60; // 1000 * 60
+                String etString = String.format("%02d:%02d", etHour, etMin);
+
+                // draw ET background
+                canvas.save();
+                canvas.clipRect(0, 0, width, height);
+                canvas.clipRect(0, centerY, width, height);
+                canvas.drawColor(calcColor(etHour, etMin));
+                canvas.restore();
 
                 // draw ET
                 float etX = centerX - mETTextWidth / 2f;
@@ -270,6 +302,23 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             }
 
             updateTimer();
+        }
+
+        private int calcColor(int hour, int minute) {
+            float value = (hour + minute / 60f) / 24f;
+            int red = 255, green = 255, blue = 255;
+            for (int i = 0; i < mPositions.length - 1; i++) {
+                if (mPositions[i] <= value && value < mPositions[i + 1]) {
+                    float d = mPositions[i + 1] - mPositions[i];
+                    float a = (value - mPositions[i]) / d;
+                    float b = (mPositions[i + 1] - value) / d;
+                    red = Math.round(Color.red(mColors[i]) * b + Color.red(mColors[i + 1]) * a);
+                    green = Math.round(Color.green(mColors[i]) * b + Color.green(mColors[i + 1]) * a);
+                    blue = Math.round(Color.blue(mColors[i]) * b + Color.blue(mColors[i + 1]) * a);
+                    break;
+                }
+            }
+            return Color.rgb(red, green, blue);
         }
 
         private void updateFontMetrics() {
