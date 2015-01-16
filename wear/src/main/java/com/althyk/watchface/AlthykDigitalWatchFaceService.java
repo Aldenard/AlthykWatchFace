@@ -64,6 +64,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
         Paint mETPaint = new Paint();
         float mLTTextWidth, mLTTextHeight;
         float mETTextWidth, mETTextHeight;
+        float mTextPositionRatio = 0.5f;
 
         int[] mColors = {
                 Color.parseColor("#5062a6"),
@@ -182,11 +183,16 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             // Load resources that have alternate values for round watches.
             Resources resources = AlthykDigitalWatchFaceService.this.getResources();
             boolean isRound = insets.isRound();
+
+            // text size
             float textSize = resources.getDimension(isRound
                     ? R.dimen.digital_text_size_round : R.dimen.digital_text_size);
-
             mLTPaint.setTextSize(textSize);
             mETPaint.setTextSize(textSize);
+
+            // text position
+            mTextPositionRatio = isRound ? 0.4f : 0.5f;
+
             updateFontMetrics();
         }
 
@@ -238,6 +244,9 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             float centerX = bounds.exactCenterX();
             float centerY = shouldTimerBeRunning ? (height - cardHeight) / 2f : height / 2f;
 
+            float dist = cardHeight > 0 ? (height - cardHeight) / 4f : centerY * mTextPositionRatio;
+            dist = shouldTimerBeRunning ? dist : centerY * mTextPositionRatio;
+
             // calc LT time
             int ltHour = mTime.hour;
             int ltMin = mTime.minute;
@@ -255,7 +264,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
 
             // draw LT
             float ltX = centerX - mLTTextWidth / 2f;
-            float ltY = qY + mLTTextHeight / 2f;
+            float ltY = centerY - dist + mLTTextHeight / 2f;
             canvas.drawText(ltString, ltX, ltY, mLTPaint);
 
             if (shouldTimerBeRunning) {
@@ -272,7 +281,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
 
                 // draw ET
                 float etX = centerX - mETTextWidth / 2f;
-                float etY = centerY + qY + mETTextHeight /2f;
+                float etY = centerY + dist + mETTextHeight /2f;
                 canvas.drawText(etString, etX, etY, mETPaint);
 
                 // center line
