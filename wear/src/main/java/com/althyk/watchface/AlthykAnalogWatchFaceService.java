@@ -137,9 +137,10 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(AlthykAnalogWatchFaceService.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
+                    .setPeekOpacityMode(WatchFaceStyle.PEEK_OPACITY_MODE_TRANSLUCENT)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
-                    .setStatusBarGravity(Gravity.TOP | Gravity.LEFT)
+                    .setStatusBarGravity(Gravity.CENTER)
                     .setHotwordIndicatorGravity(Gravity.CENTER)
                     .setViewProtection(WatchFaceStyle.PROTECT_STATUS_BAR |
                             WatchFaceStyle.PROTECT_HOTWORD_INDICATOR)
