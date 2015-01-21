@@ -115,6 +115,8 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                             } else {
                                 mAnimationValue = 1f;
                             }
+                        } else {
+                            mAnimationValue = 1f;
                         }
                         break;
                 }
@@ -410,6 +412,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         }
 
         private void updateAnimation() {
+            mAnimationValue = 1f;
             mUpdateTimeHandler.removeMessages(MSG_UPDATE_ANIMATION);
             if (shouldTimerBeRunning()) {
                 mAnimationStart = System.currentTimeMillis();
