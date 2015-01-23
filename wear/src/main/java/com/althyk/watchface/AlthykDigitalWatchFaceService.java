@@ -32,6 +32,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = 8750; // 3 [minutes in ET] = 8750 [msec]
     private static final long INTERACTIVE_UPDATE_RATE_CHILD_MS = 2917; // 2917 + 2917 + 2916 = 8750
+    private static final long INTERACTIVE_UPDATE_RATE_MS_IN_AMBIENT = 8750 * 20; // 1 [hour in ET] = 8750 * 20 [msec]
     private static final long ANIMATION_DURATION = 500;
     private static final long ANIMATION_UPDATE_RATE = TimeUnit.SECONDS.toMillis(1) / 30; // 30fps
 
@@ -49,7 +50,8 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
 
     private class Engine extends CanvasWatchFaceService.Engine {
         static final int MSG_UPDATE_TIME = 0;
-        static final int MSG_UPDATE_ANIMATION = 1;
+        static final int MSG_UPDATE_TIME_AMBIENT = 1;
+        static final int MSG_UPDATE_ANIMATION = 2;
 
         Time mTime;
 
@@ -98,6 +100,15 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
                                     INTERACTIVE_UPDATE_RATE_CHILD_MS);
                             mUpdateTimeHandler
                                     .sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
+                        }
+                        break;
+                    case MSG_UPDATE_TIME_AMBIENT:
+                        invalidate();
+                        if (!shouldTimerBeRunning()) {
+                            long timeMs = System.currentTimeMillis();
+                            long delayMs = INTERACTIVE_UPDATE_RATE_MS_IN_AMBIENT
+                                    - (timeMs % INTERACTIVE_UPDATE_RATE_MS_IN_AMBIENT);
+                            mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIME_AMBIENT, delayMs);
                         }
                         break;
                     case MSG_UPDATE_ANIMATION:
@@ -174,6 +185,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onDestroy() {
             mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
+            mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME_AMBIENT);
             unregisterReceiver();
             super.onDestroy();
         }
@@ -244,7 +256,7 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
 
             float qY = shouldTimerBeRunning ? (height - cardHeight) / 4f : height / 4f;
             float centerX = bounds.exactCenterX();
-            float centerY = shouldTimerBeRunning ? (height - cardHeight) / 2f : height / 2f;
+            float centerY = (height - cardHeight) / 2f;
 
             float dist = cardHeight > 0 ? (height - cardHeight) / 4f : centerY * mTextPositionRatio;
             dist = shouldTimerBeRunning ? dist : centerY * mTextPositionRatio;
@@ -286,9 +298,18 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
                 float etY = centerY + dist + mETTextHeight /2f;
                 canvas.drawText(etString, etX, etY, mETPaint);
 
-                // center line
-                canvas.drawLine(0, centerY, width * mAnimationValue, centerY, mLinePaint);
+            } else {
+                int etHour = (int) Math.floor(etMillis / 3600000) % 24; // 1000 * 60 * 60
+                String etString = String.format("%02d:--", etHour);
+
+                // draw ET
+                float etX = centerX - mETTextWidth / 2f;
+                float etY = centerY + dist + mETTextHeight /2f;
+                canvas.drawText(etString, etX, etY, mETPaint);
             }
+
+            // center line
+            canvas.drawLine(0, centerY, width * mAnimationValue, centerY, mLinePaint);
         }
 
         @Override
@@ -375,8 +396,11 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
          */
         private void updateTimer() {
             mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
+            mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME_AMBIENT);
             if (shouldTimerBeRunning()) {
                 mUpdateTimeHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+            } else {
+                mUpdateTimeHandler.sendEmptyMessage(MSG_UPDATE_TIME_AMBIENT);
             }
         }
 
