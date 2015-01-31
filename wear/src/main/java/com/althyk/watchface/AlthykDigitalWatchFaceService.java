@@ -170,11 +170,13 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
             mLTPaint.setARGB(255, 255, 255, 255);
             mLTPaint.setTypeface(NORMAL_TYPEFACE);
             mLTPaint.setAntiAlias(true);
+            mLTPaint.setShadowLayer(5f, 0f, 0f, Color.argb(128, 0, 0, 0));
 
             mETPaint = new Paint();
             mETPaint.setARGB(255, 255, 255, 255);
             mETPaint.setTypeface(NORMAL_TYPEFACE);
             mETPaint.setAntiAlias(true);
+            mETPaint.setShadowLayer(5f, 0f, 0f, Color.argb(128, 0, 0, 0));
 
             updateFontMetrics();
 
@@ -236,6 +238,14 @@ public class AlthykDigitalWatchFaceService extends CanvasWatchFaceService {
                 mLTPaint.setAntiAlias(antiAlias);
                 mETPaint.setAntiAlias(antiAlias);
                 updateFontMetrics();
+            }
+
+            if (inAmbientMode) {
+                mLTPaint.clearShadowLayer();
+                mETPaint.clearShadowLayer();
+            } else {
+                mLTPaint.setShadowLayer(5f, 0f, 0f, Color.argb(128, 0, 0, 0));
+                mETPaint.setShadowLayer(5f, 0f, 0f, Color.argb(128, 0, 0, 0));
             }
 
             invalidate();
