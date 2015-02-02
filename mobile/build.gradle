@@ -8,8 +8,8 @@ android {
         applicationId "com.althyk.watchface"
         minSdkVersion 18
         targetSdkVersion 21
-        versionCode 3
-        versionName "0.3.0"
+        versionCode 4
+        versionName "0.3.1"
     }
     buildTypes {
         release {
