@@ -23,6 +23,7 @@ import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
 import com.althyk.watchfacecommon.DataSyncUtil;
+import com.althyk.watchfacecommon.MessageSender;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.DataApi;
@@ -33,6 +34,7 @@ import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Wearable;
 
+import java.util.ArrayList;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -70,7 +72,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         Time mTime;
 
         /* weather data */
-        boolean mNeedToFetch;
+        boolean mNeedToFetch = true;
 
         /* device feature */
         boolean mLowBitAmbient;
@@ -489,14 +491,14 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
 
                     DataItem dataItem = dataEvent.getDataItem();
                     if (!dataItem.getUri().getPath().equals(
-                            DataSyncUtil.PATH_REQUEST_FETCH)) {
+                            DataSyncUtil.PATH_DATA_WEATHER)) {
                         continue;
                     }
 
                     DataMapItem dataMapItem = DataMapItem.fromDataItem(dataItem);
-                    DataMap config = dataMapItem.getDataMap();
+                    DataMap dataMap = dataMapItem.getDataMap();
                     if (Log.isLoggable(TAG, Log.DEBUG)) {
-                        Log.d(TAG, "Config DataItem updated:" + config);
+                        Log.d(TAG, "Config DataItem updated:" + dataMap);
                     }
                 }
             } finally {

@@ -16,7 +16,7 @@
         android:theme="@android:style/Theme.DeviceDefault">
 
         <service
-            android:name="com.althyk.watchface.AlthykDigitalWatchFaceService"
+            android:name=".AlthykDigitalWatchFaceService"
             android:label="@string/digital_name"
             android:allowEmbedded="true"
             android:taskAffinity=""
@@ -38,7 +38,7 @@
         </service>
 
         <service
-            android:name="com.althyk.watchface.AlthykAnalogWatchFaceService"
+            android:name=".AlthykAnalogWatchFaceService"
             android:label="@string/analog_name"
             android:allowEmbedded="true"
             android:taskAffinity=""
@@ -56,6 +56,12 @@
                 <action android:name="android.service.wallpaper.WallpaperService" />
                 <category
                     android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+        </service>
+
+        <service android:name=".MessageListenerService">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
             </intent-filter>
         </service>
 

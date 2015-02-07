@@ -1,4 +1,4 @@
-package com.althyk.watchface;
+package com.althyk.watchfacecommon;
 
 import android.util.Log;
 
@@ -9,7 +9,7 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
-public final class MessageSender {
+public class MessageSender {
     private static final String TAG = "MessageSender";
 
     public static final void sendMessage (final GoogleApiClient client,
@@ -39,5 +39,4 @@ public final class MessageSender {
 
         return;
     }
-
 }
