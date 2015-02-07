@@ -4,3 +4,9 @@
 /.idea/libraries
 .DS_Store
 /build
+
+keys.xml
+*.apk
+keystore.jks
+
+manifest-merger-release-report.txt
