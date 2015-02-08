@@ -23,6 +23,7 @@ import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
 import com.althyk.watchfacecommon.DataSyncUtil;
+import com.althyk.watchfacecommon.ETime;
 import com.althyk.watchfacecommon.MessageSender;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -298,6 +299,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             /* update the time */
             mTime.setToNow();
             long millis = System.currentTimeMillis();
+            ETime etime = new ETime().setLtMillis(millis);
 
             int width = bounds.width();
             int height = bounds.height();
@@ -340,14 +342,14 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             canvas.drawLine(centerX, centerY, centerX + hrX, centerY + hrY, mHourPaint);
 
             // Draw the circle
-            double etMillis = millis * L_E_TIME_RATE;
-            int etHour = (int) Math.floor(etMillis / 3600000) % 24; // 1000 * 60 * 60
+            int etHour = etime.hour;
             long prevETTickMS = millis - (millis % ET_HOUR_IN_LT_MS);
             double startRad = (prevETTickMS % LT_HOUR_IN_LT_MS) * LT_MS_IN_RAD;
+            float startDeg = (float) (startRad * 180 / Math.PI);
             if (shouldTimerBeRunning()) {
                 canvas.save(Canvas.MATRIX_SAVE_FLAG);
                 canvas.translate(centerX, centerY);
-                canvas.rotate((float) (startRad * 180 / Math.PI) - etHour * 15 - 90f);
+                canvas.rotate(startDeg - 90f - etHour * 15); // 15 = 360 / 24
                 canvas.drawArc(-centerX + 15, -centerY + 15, centerX - 15, centerY - 15,
                         0f, 360f, false, mCirclePaint);
                 canvas.restore();
@@ -355,7 +357,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 // dimming
                 canvas.save(Canvas.MATRIX_SAVE_FLAG);
                 canvas.translate(centerX, centerY);
-                canvas.rotate((float) (startRad * 180 / Math.PI) - 90f);
+                canvas.rotate(startDeg - 90f);
                 float sweepDegree = 360f * mAnimationValue;
                 canvas.drawArc(-centerX + 15, -centerY + 15, centerX - 15, centerY - 15,
                         0, sweepDegree, false, mCircleDimPaint);
