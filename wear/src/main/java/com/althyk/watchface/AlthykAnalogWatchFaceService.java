@@ -5,6 +5,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -36,6 +38,7 @@ import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Wearable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -50,7 +53,6 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
     private static final long ANIMATION_DURATION = 500;
     private static final long ANIMATION_UPDATE_RATE = TimeUnit.SECONDS.toMillis(1) / 30; // 30fps
 
-    private static final double L_E_TIME_RATE = 3600.0 / 175;
     private static final double LT_MS_IN_RAD = 2 * Math.PI / (1000 * 60 * 60);
     private static final long ET_HOUR_IN_LT_MS = 1000 * 60 * 70 / 24; // 24 [hour in ET] = 70 [min]
     private static final long LT_HOUR_IN_LT_MS = 1000 * 60 * 60;
@@ -70,10 +72,14 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         static final int MSG_UPDATE_TIME = 0;
         static final int MSG_UPDATE_ANIMATION = 1;
 
+        static final int WEATHER_ICON_SIZE = 30;
+
         Time mTime;
 
         /* weather data */
+        int mWeatherArea = 4;
         boolean mNeedToFetch = true;
+        HashMap<String, Bitmap> mWeatherHashMap = new HashMap<>();
 
         /* device feature */
         boolean mLowBitAmbient;
@@ -90,6 +96,8 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         Paint mCircleDimPaint;
         Paint mCircleDimInvPaint;
         Paint mTextPaint = new Paint();
+
+        Paint mWeatherPaint;
 
         int[] mColors = {
                 Color.parseColor("#5062a6"),
@@ -197,11 +205,13 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             mETTickPaint = new Paint();
             mETTickPaint.setARGB(255, 0, 0, 0);
             mETTickPaint.setStrokeWidth(3.f);
+            mETTickPaint.setStrokeCap(Paint.Cap.ROUND);
             mETTickPaint.setAntiAlias(true);
 
             mAccentETTickPaint = new Paint();
             mAccentETTickPaint.setARGB(255, 0, 0, 0);
             mAccentETTickPaint.setStrokeWidth(6.f);
+            mAccentETTickPaint.setStrokeCap(Paint.Cap.ROUND);
             mAccentETTickPaint.setAntiAlias(true);
 
             mCirclePaint = new Paint();
@@ -216,14 +226,15 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                     Color.argb(255, 0, 0, 0)
             };
             float[] positions = {0.f, 0.7f, 1.f};
+            float dimWidth = 28f;
             mCircleDimPaint = new Paint();
-            mCircleDimPaint.setStrokeWidth(12.f);
+            mCircleDimPaint.setStrokeWidth(dimWidth);
             mCircleDimPaint.setAntiAlias(true);
             mCircleDimPaint.setStyle(Paint.Style.STROKE);
             mCircleDimPaint.setShader(new SweepGradient(0, 0, colors, positions));
 
             mCircleDimInvPaint = new Paint();
-            mCircleDimInvPaint.setStrokeWidth(12.f);
+            mCircleDimInvPaint.setStrokeWidth(dimWidth);
             mCircleDimInvPaint.setAntiAlias(true);
             mCircleDimInvPaint.setStyle(Paint.Style.STROKE);
             mCircleDimInvPaint.setARGB(255, 0, 0, 0);
@@ -233,6 +244,9 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             mTextPaint.setTypeface(NORMAL_TYPEFACE);
             mTextPaint.setAntiAlias(true);
             mTextPaint.setTextSize(18f);
+
+            mWeatherPaint = new Paint();
+            mWeatherPaint.setFilterBitmap(true);
 
             /* allocate an object to hold the time*/
             mTime = new Time();
@@ -266,6 +280,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         public void onTimeTick() {
             super.onTimeTick();
 
+            updateFetchRequest();
             invalidate();
         }
 
@@ -284,6 +299,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 mCirclePaint.setAntiAlias(antiAlias);
                 mCircleDimPaint.setAntiAlias(antiAlias);
                 mCircleDimInvPaint.setAntiAlias(antiAlias);
+                mWeatherPaint.setFilterBitmap(antiAlias);
             }
 
             invalidate();
@@ -347,14 +363,80 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             double startRad = (prevETTickMS % LT_HOUR_IN_LT_MS) * LT_MS_IN_RAD;
             float startDeg = (float) (startRad * 180 / Math.PI);
             if (shouldTimerBeRunning()) {
-                canvas.save(Canvas.MATRIX_SAVE_FLAG);
-                canvas.translate(centerX, centerY);
-                canvas.rotate(startDeg - 90f - etHour * 15); // 15 = 360 / 24
-                canvas.drawArc(-centerX + 15, -centerY + 15, centerX - 15, centerY - 15,
-                        0f, 360f, false, mCirclePaint);
-                canvas.restore();
+                if (mWeatherArea == 0) {
+                    canvas.save(Canvas.MATRIX_SAVE_FLAG);
+                    canvas.translate(centerX, centerY);
+                    canvas.rotate(startDeg - 90f - etHour * 15); // 15 = 360 / 24
+                    canvas.drawArc(-centerX + 15, -centerY + 15, centerX - 15, centerY - 15,
+                            0f, 360f, false, mCirclePaint);
+                    canvas.restore();
+                } else {
+                    ETime weatherStart = etime.generateStartET();
+                    String[] timeIds = {
+                            weatherStart.getTimeId(),
+                            new ETime().setEtMillis(weatherStart.time + ETime.HOUR_IN_MILLIS * 8).getTimeId(),
+                            new ETime().setEtMillis(weatherStart.time + ETime.HOUR_IN_MILLIS * 8 * 2).getTimeId(),
+                            new ETime().setEtMillis(weatherStart.time + ETime.HOUR_IN_MILLIS * 8 * 3).getTimeId(),
+                    };
+                    int timeIndex = 0;
+                    float etCenterTickRadius = centerX - 15;
+                    for (int etTickIndex = 0; etTickIndex < 20; etTickIndex++) {
+                        String timeId = timeIds[timeIndex];
+                        Bitmap bitmap = mWeatherHashMap.get(timeId);
+                        if (bitmap != null) {
+                            float tickRot = (float) (startRad + etTickIndex * ET_HOUR_IN_RAD);
+                            float wPosX = (float) Math.sin(tickRot + ET_HOUR_IN_RAD / 2f) * etCenterTickRadius;
+                            float wPosY = (float) -Math.cos(tickRot + ET_HOUR_IN_RAD / 2f) * etCenterTickRadius;
+                            float posX = wPosX - bitmap.getWidth() / 2f;
+                            float posY = wPosY - bitmap.getHeight() / 2f;
+                            canvas.drawBitmap(bitmap, posX + centerX, posY + centerY, mWeatherPaint);
+                        }
 
-                // dimming
+                        int nextTickHour = (etHour + etTickIndex + 1) % 24;
+                        if (nextTickHour % 8 == 0) {
+                            timeIndex ++;
+                        }
+                    }
+                }
+            }
+
+            // Draw the ET ticks.
+            float etTextRadius = centerX - 40;
+            float etInnerTickRadius = centerX - 20;
+            float etOuterTickRadius = centerX - 10;
+            if (mWeatherArea == 0) {
+                mETTickPaint.setARGB(255, 0, 0, 0);
+                mAccentETTickPaint.setARGB(255, 0, 0, 0);
+            } else {
+                etInnerTickRadius = centerX - 15;
+                etOuterTickRadius = centerX - 14;
+                mETTickPaint.setARGB(255, 128, 128, 128);
+                mAccentETTickPaint.setARGB(255, 200, 200, 200);
+            }
+            for (int etTickIndex = 0; etTickIndex < 20; etTickIndex++) {
+                float tickRot = (float) (startRad + etTickIndex * ET_HOUR_IN_RAD);
+                float innerX = (float) Math.sin(tickRot) * etInnerTickRadius;
+                float innerY = (float) -Math.cos(tickRot) * etInnerTickRadius;
+                float outerX = (float) Math.sin(tickRot) * etOuterTickRadius;
+                float outerY = (float) -Math.cos(tickRot) * etOuterTickRadius;
+
+                int tickHour = etHour + etTickIndex;
+                canvas.drawLine(centerX + innerX, centerY + innerY,
+                        centerX + outerX, centerY + outerY,
+                        tickHour % 8 != 0 ? mETTickPaint : mAccentETTickPaint);
+
+                if (etTickIndex == 0 || tickHour % 8 == 0) {
+                    String hourText = (tickHour % 24) + "";
+                    Rect rect = new Rect();
+                    mTextPaint.getTextBounds(hourText, 0, hourText.length(), rect);
+                    float textX = (float) Math.sin(tickRot) * etTextRadius - rect.width() / 2f;
+                    float textY = (float) -Math.cos(tickRot) * etTextRadius + rect.height() / 2f;
+                    canvas.drawText(hourText, centerX + textX, centerY + textY, mTextPaint);
+                }
+            }
+
+            // dimming
+            if (shouldTimerBeRunning()) {
                 canvas.save(Canvas.MATRIX_SAVE_FLAG);
                 canvas.translate(centerX, centerY);
                 canvas.rotate(startDeg - 90f);
@@ -364,34 +446,6 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 canvas.drawArc(-centerX + 15, -centerY + 15, centerX - 15, centerY - 15,
                         sweepDegree, 360f - sweepDegree, false, mCircleDimInvPaint);
                 canvas.restore();
-            }
-
-            // Draw the ET ticks.
-            float etTextRadius = centerX - 35;
-            float etInnerTickRadius = centerX - 20;
-            float etOuterTickRadius = centerX - 10;
-            for (int etTickIndex = 0; etTickIndex < 20; etTickIndex++) {
-                float tickRot = (float) (startRad + etTickIndex * ET_HOUR_IN_RAD);
-                float innerX = (float) Math.sin(tickRot) * etInnerTickRadius;
-                float innerY = (float) -Math.cos(tickRot) * etInnerTickRadius;
-                float outerX = (float) Math.sin(tickRot) * etOuterTickRadius;
-                float outerY = (float) -Math.cos(tickRot) * etOuterTickRadius;
-
-                int tickHour = etHour + etTickIndex;
-                if (etTickIndex != 0 && tickHour % 8 != 0) {
-                    canvas.drawLine(centerX + innerX, centerY + innerY,
-                            centerX + outerX, centerY + outerY, mETTickPaint);
-                } else {
-                    canvas.drawLine(centerX + innerX, centerY + innerY,
-                            centerX + outerX, centerY + outerY, mAccentETTickPaint);
-
-                    String hourText = (tickHour % 24) + "";
-                    Rect rect = new Rect();
-                    mTextPaint.getTextBounds(hourText, 0, hourText.length(), rect);
-                    float textX = (float) Math.sin(tickRot) * etTextRadius - rect.width() / 2f;
-                    float textY = (float) -Math.cos(tickRot) * etTextRadius + rect.height() / 2f;
-                    canvas.drawText(hourText, centerX + textX, centerY + textY, mTextPaint);
-                }
             }
         }
 
@@ -443,6 +497,39 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             }
             mRegisteredTimeZoneReceiver = false;
             AlthykAnalogWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
+        }
+
+        private void updateWeather(DataMap dataMap) {
+            ArrayList<DataMap> weatherList =
+                    dataMap.getDataMapArrayList(DataSyncUtil.KEY_WEATHER_LIST);
+
+            if (weatherList.size() != 0) {
+                mWeatherHashMap.clear();
+            }
+
+            for (DataMap weatherDataMap : weatherList) {
+                int weatherArea = weatherDataMap.getInt(DataSyncUtil.KEY_WEATHER_AREA);
+                if (weatherArea == mWeatherArea) {
+                    int year = weatherDataMap.getInt(DataSyncUtil.KEY_WEATHER_YEAR);
+                    int month = weatherDataMap.getInt(DataSyncUtil.KEY_WEATHER_MONTH);
+                    int day = weatherDataMap.getInt(DataSyncUtil.KEY_WEATHER_DAY);
+                    int hour = weatherDataMap.getInt(DataSyncUtil.KEY_WEATHER_HOUR);
+                    String key = ETime.getTimeId(year, month, day, hour);
+
+                    int weatherId = weatherDataMap.getInt(DataSyncUtil.KEY_WEATHER_ID);
+                    String resourceName = String.format("weather_icon_%02d", weatherId);
+                    int iconId = getResources().getIdentifier(resourceName, "drawable", "com.althyk.watchface");
+                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), iconId);
+                    bitmap = Bitmap.createScaledBitmap(bitmap, WEATHER_ICON_SIZE, WEATHER_ICON_SIZE,
+                            true);
+
+                    mWeatherHashMap.put(key, bitmap);
+                }
+            }
+
+            if (weatherList.size() == 24 * 5) {
+                // remove 1min fetch message
+            }
         }
 
         private void updateFetchRequest () {
@@ -502,6 +589,8 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                     if (Log.isLoggable(TAG, Log.DEBUG)) {
                         Log.d(TAG, "Config DataItem updated:" + dataMap);
                     }
+
+                    updateWeather(dataMap);
                 }
             } finally {
                 dataEvents.close();
