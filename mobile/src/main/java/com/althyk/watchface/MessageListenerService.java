@@ -74,7 +74,7 @@ public class MessageListenerService extends WearableListenerService
         ETime etime = new ETime().setToNow().generateStartET();
         final ArrayList<ETime> etimeList = new ArrayList<>();
         for (int i = -1; i < 4; i++) {
-            etimeList.add(new ETime().setEtMillis(etime.time - ETime.HOUR_IN_MILLIS * 8 * i));
+            etimeList.add(new ETime().setEtMillis(etime.time + ETime.HOUR_IN_MILLIS * 8 * i));
         }
 
         WeatherApi.getWeatherList(this, new WeatherApi.WeatherCallback() {
