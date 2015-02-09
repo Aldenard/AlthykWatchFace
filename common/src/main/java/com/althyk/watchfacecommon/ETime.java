@@ -64,4 +64,13 @@ public class ETime {
         return new ETime().setEtMillis(this.time - diffMillis);
     }
 
+    // year-month-day-hour
+    public String getTimeId() {
+        return ETime.getTimeId(this.year, this.month, this.day, this.hour);
+    }
+
+    public static final String getTimeId(int year, int month, int day, int hour) {
+        return String.format("%d-%02d-%02d-%02d", year, month, day, hour);
+    }
+
 }
