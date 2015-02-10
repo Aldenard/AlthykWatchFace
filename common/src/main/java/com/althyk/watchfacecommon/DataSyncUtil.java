@@ -4,6 +4,7 @@ public final class DataSyncUtil {
     // PATH
     public static final String PATH_REQUEST_FETCH = "/request/fetch";
     public static final String PATH_DATA_WEATHER  = "/data/weather";
+    public static final String PATH_DATA_AREA     = "/data/area";
 
     // KEY
     public static final String KEY_WEATHER_LIST  = "KEY_WEATHER_LIST";

@@ -24,6 +24,7 @@ import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
+import com.althyk.watchfacecommon.DataMapUtil;
 import com.althyk.watchfacecommon.DataSyncUtil;
 import com.althyk.watchfacecommon.ETime;
 import com.althyk.watchfacecommon.MessageSender;
@@ -37,6 +38,7 @@ import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Wearable;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TimeZone;
@@ -72,7 +74,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         static final int MSG_UPDATE_TIME = 0;
         static final int MSG_UPDATE_ANIMATION = 1;
 
-        static final int WEATHER_ICON_SIZE = 30;
+        static final int WEATHER_ICON_SIZE = 32;
 
         Time mTime;
 
@@ -226,7 +228,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                     Color.argb(255, 0, 0, 0)
             };
             float[] positions = {0.f, 0.7f, 1.f};
-            float dimWidth = 28f;
+            float dimWidth = WEATHER_ICON_SIZE;
             mCircleDimPaint = new Paint();
             mCircleDimPaint.setStrokeWidth(dimWidth);
             mCircleDimPaint.setAntiAlias(true);
@@ -500,8 +502,22 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         }
 
         private void updateWeather(DataMap dataMap) {
+            if (dataMap == null) {
+                DataMapUtil.fetchDataMap(mGoogleApiClient, DataSyncUtil.PATH_DATA_WEATHER,
+                        new DataMapUtil.FetchDataMapCallback() {
+                            @Override
+                            public void onDataMapFetched(DataMap dataMap) {
+                                updateWeather(dataMap);
+                            }
+                        });
+                return;
+            };
+
             ArrayList<DataMap> weatherList =
                     dataMap.getDataMapArrayList(DataSyncUtil.KEY_WEATHER_LIST);
+            if (weatherList == null) {
+                return;
+            }
 
             if (weatherList.size() != 0) {
                 mWeatherHashMap.clear();
@@ -529,6 +545,16 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
 
             if (weatherList.size() == 24 * 5) {
                 // remove 1min fetch message
+            }
+
+            invalidate();
+        }
+
+        private void updateArea(DataMap dataMap) {
+            int areaId = dataMap.getInt(DataSyncUtil.KEY_WEATHER_AREA);
+            if (areaId > -1) {
+                mWeatherArea = areaId;
+                updateWeather(null);
             }
         }
 
@@ -570,6 +596,39 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             return isVisible() && !isInAmbientMode();
         }
 
+        private void updateConfigDataItemAndUiOnStartup() {
+            // Weather Data
+            DataMapUtil.fetchDataMap(mGoogleApiClient, DataSyncUtil.PATH_DATA_WEATHER,
+                    new DataMapUtil.FetchDataMapCallback() {
+                        @Override
+                        public void onDataMapFetched(DataMap config) {
+                            // If the DataItem hasn't been created yet or some keys are missing,
+                            // use the default values.
+                            if (!config.containsKey(DataSyncUtil.KEY_WEATHER_LIST)) {
+                                ArrayList<DataMap> dataMapList = new ArrayList<>();
+                                config.putDataMapArrayList(DataSyncUtil.KEY_WEATHER_LIST, dataMapList);
+                            }
+                            DataMapUtil.putDataItem(mGoogleApiClient, DataSyncUtil.PATH_DATA_WEATHER, config);
+                            updateWeather(config);
+                        }
+                    });
+
+            // Area
+            DataMapUtil.fetchDataMap(mGoogleApiClient, DataSyncUtil.PATH_DATA_AREA,
+                    new DataMapUtil.FetchDataMapCallback() {
+                        @Override
+                        public void onDataMapFetched(DataMap config) {
+                            // If the DataItem hasn't been created yet or some keys are missing,
+                            // use the default values.
+                            if (!config.containsKey(DataSyncUtil.KEY_WEATHER_AREA)) {
+                                config.putInt(DataSyncUtil.KEY_WEATHER_AREA, 0);
+                            }
+                            DataMapUtil.putDataItem(mGoogleApiClient, DataSyncUtil.PATH_DATA_AREA, config);
+                            updateArea(config);
+                        }
+                    });
+        }
+
         @Override // DataApi.DataListener
         public void onDataChanged(DataEventBuffer dataEvents) {
             try {
@@ -579,18 +638,20 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                     }
 
                     DataItem dataItem = dataEvent.getDataItem();
-                    if (!dataItem.getUri().getPath().equals(
-                            DataSyncUtil.PATH_DATA_WEATHER)) {
-                        continue;
-                    }
-
                     DataMapItem dataMapItem = DataMapItem.fromDataItem(dataItem);
                     DataMap dataMap = dataMapItem.getDataMap();
                     if (Log.isLoggable(TAG, Log.DEBUG)) {
                         Log.d(TAG, "Config DataItem updated:" + dataMap);
                     }
 
-                    updateWeather(dataMap);
+                    switch (dataItem.getUri().getPath()) {
+                        case DataSyncUtil.PATH_DATA_WEATHER:
+                            updateWeather(dataMap);
+                            break;
+                        case DataSyncUtil.PATH_DATA_AREA:
+                            updateArea(dataMap);
+                            break;
+                    }
                 }
             } finally {
                 dataEvents.close();
@@ -603,6 +664,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 Log.d(TAG, "onConnected: " + connectionHint);
             }
             Wearable.DataApi.addListener(mGoogleApiClient, Engine.this);
+            updateConfigDataItemAndUiOnStartup();
         }
 
         @Override  // GoogleApiClient.ConnectionCallbacks

@@ -52,6 +52,14 @@
             <meta-data
                 android:name="com.google.android.wearable.watchface.preview_circular"
                 android:resource="@drawable/preview_analog_circular" />
+        <!--
+            <meta-data
+                android:name="com.google.android.wearable.watchface.companionConfigurationAction"
+                android:value="com.example.android.wearable.watchface.WEATHER_AREA_CONFIG" />
+        -->
+            <meta-data
+                android:name="com.google.android.wearable.watchface.wearableConfigurationAction"
+                android:value="com.example.android.wearable.watchface.WEATHER_AREA_CONFIG" />
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
                 <category
@@ -64,6 +72,20 @@
                 <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
             </intent-filter>
         </service>
+
+        <!-- All intent-filters for config actions must include the categories
+      com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION
+      and android.intent.category.DEFAULT. -->
+
+        <activity
+            android:name=".WearableConfigActivity"
+            android:label="@string/config_name">
+            <intent-filter>
+                <action android:name="com.example.android.wearable.watchface.WEATHER_AREA_CONFIG" />
+                <category android:name="com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
 
     </application>
 

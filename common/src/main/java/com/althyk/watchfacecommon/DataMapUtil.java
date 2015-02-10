@@ -1,6 +1,5 @@
 package com.althyk.watchfacecommon;
 
-import android.graphics.Color;
 import android.net.Uri;
 import android.util.Log;
 
