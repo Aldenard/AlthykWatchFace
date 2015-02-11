@@ -136,7 +136,6 @@ public class WearableConfigActivity  extends Activity implements
         configKeysToOverwrite.putInt(DataSyncUtil.KEY_WEATHER_AREA, areaId);
         DataMapUtil.overwriteKeysInDataMap(mGoogleApiClient,
                 DataSyncUtil.PATH_DATA_AREA, configKeysToOverwrite);
-        Log.d(TAG, "updateConfigDataItem : " + configKeysToOverwrite);
     }
 
     private class AreaListAdapter extends WearableListView.Adapter {
@@ -184,8 +183,6 @@ public class WearableConfigActivity  extends Activity implements
             WearableListView.OnCenterProximityListener {
         /** The duration of the expand/shrink animation. */
         private static final int ANIMATION_DURATION_MS = 150;
-        /** The ratio for the size of a circle in shrink state. */
-        private static final float SHRINK_CIRCLE_RATIO = .75f;
 
         private static final float SHRINK_LABEL_ALPHA = .5f;
         private static final float EXPAND_LABEL_ALPHA = 1f;
@@ -194,14 +191,9 @@ public class WearableConfigActivity  extends Activity implements
         private final TextView mLabel;
         private final CircledImageView mIcon;
 
-        private final float mExpandCircleRadius;
-        private final float mShrinkCircleRadius;
-
-        private final ObjectAnimator mExpandCircleAnimator;
         private final ObjectAnimator mExpandLabelAnimator;
         private final AnimatorSet mExpandAnimator;
 
-        private final ObjectAnimator mShrinkCircleAnimator;
         private final ObjectAnimator mShrinkLabelAnimator;
         private final AnimatorSet mShrinkAnimator;
 
@@ -213,22 +205,15 @@ public class WearableConfigActivity  extends Activity implements
             mLabel = (TextView) findViewById(R.id.label);
             mIcon = (CircledImageView) findViewById(R.id.icon);
 
-            mExpandCircleRadius = mIcon.getCircleRadius();
-            mShrinkCircleRadius = mExpandCircleRadius * SHRINK_CIRCLE_RATIO;
-
-            mShrinkCircleAnimator = ObjectAnimator.ofFloat(mIcon, "circleRadius",
-                    mExpandCircleRadius, mShrinkCircleRadius);
             mShrinkLabelAnimator = ObjectAnimator.ofFloat(mLabel, "alpha",
                     EXPAND_LABEL_ALPHA, SHRINK_LABEL_ALPHA);
             mShrinkAnimator = new AnimatorSet().setDuration(ANIMATION_DURATION_MS);
-            mShrinkAnimator.playTogether(mShrinkCircleAnimator, mShrinkLabelAnimator);
+            mShrinkAnimator.play(mShrinkLabelAnimator);
 
-            mExpandCircleAnimator = ObjectAnimator.ofFloat(mIcon, "circleRadius",
-                    mShrinkCircleRadius, mExpandCircleRadius);
             mExpandLabelAnimator = ObjectAnimator.ofFloat(mLabel, "alpha",
                     SHRINK_LABEL_ALPHA, EXPAND_LABEL_ALPHA);
             mExpandAnimator = new AnimatorSet().setDuration(ANIMATION_DURATION_MS);
-            mExpandAnimator.playTogether(mExpandCircleAnimator, mExpandLabelAnimator);
+            mExpandAnimator.play(mExpandLabelAnimator);
         }
 
         @Override
@@ -236,13 +221,11 @@ public class WearableConfigActivity  extends Activity implements
             if (animate) {
                 mShrinkAnimator.cancel();
                 if (!mExpandAnimator.isRunning()) {
-                    mExpandCircleAnimator.setFloatValues(mIcon.getCircleRadius(), mExpandCircleRadius);
                     mExpandLabelAnimator.setFloatValues(mLabel.getAlpha(), EXPAND_LABEL_ALPHA);
                     mExpandAnimator.start();
                 }
             } else {
                 mExpandAnimator.cancel();
-                mIcon.setCircleRadius(mExpandCircleRadius);
                 mLabel.setAlpha(EXPAND_LABEL_ALPHA);
             }
         }
@@ -252,13 +235,11 @@ public class WearableConfigActivity  extends Activity implements
             if (animate) {
                 mExpandAnimator.cancel();
                 if (!mShrinkAnimator.isRunning()) {
-                    mShrinkCircleAnimator.setFloatValues(mIcon.getCircleRadius(), mShrinkCircleRadius);
                     mShrinkLabelAnimator.setFloatValues(mLabel.getAlpha(), SHRINK_LABEL_ALPHA);
                     mShrinkAnimator.start();
                 }
             } else {
                 mShrinkAnimator.cancel();
-                mIcon.setCircleRadius(mShrinkCircleRadius);
                 mLabel.setAlpha(SHRINK_LABEL_ALPHA);
             }
         }
@@ -266,7 +247,20 @@ public class WearableConfigActivity  extends Activity implements
         private void setArea(String label, int areaId) {
             mAreaId = areaId;
             mLabel.setText(label);
-            mIcon.setCircleColor(Color.parseColor("GREEN"));
+            mIcon.setVisibility(View.VISIBLE);
+            if (areaId == 0) {
+                mIcon.setVisibility(View.GONE);
+            } else if (1 <= areaId && areaId <= 9) {
+                mIcon.setImageResource(R.drawable.limsa_lominsa_crest);
+            } else if (10 <= areaId && areaId <= 15) {
+                mIcon.setImageResource(R.drawable.gridania_crest);
+            } else if (16 <= areaId && areaId <= 22) {
+                mIcon.setImageResource(R.drawable.uldah_crest);
+            } else if (areaId == 23) {
+                mIcon.setImageResource(R.drawable.ishgard_crest);
+            } else if (areaId == 24) {
+                mIcon.setImageResource(R.drawable.other_crest);
+            }
         }
 
         private int getArea() {
