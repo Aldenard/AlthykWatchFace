@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="no_area">天候を表示しない</string>
+    <string name="area_limsa_lominsa">リムサ・ロミンサ</string>
+    <string name="area_middle_la_noscea">中央ラノシア</string>
+    <string name="area_lower_la_noscea">低地ラノシア</string>
+    <string name="area_eastern_la_noscea">東ラノシア</string>
+    <string name="area_western_la_noscea">西ラノシア</string>
+    <string name="area_upper_la_noscea">高地ラノシア</string>
+    <string name="area_outer_la_noscea">外地ラノシア</string>
+    <string name="area_wolves_den_pier">ウルヴズジェイル係船場</string>
+    <string name="area_mist">ミスト・ヴィレッジ</string>
+    <string name="area_gridania">グリダニア</string>
+    <string name="area_central_shroud">黒衣森：中央森林</string>
+    <string name="area_east_shroud">黒衣森：東部森林</string>
+    <string name="area_south_shroud">黒衣森：南部森林</string>
+    <string name="area_north_shroud">黒衣森：北部森林</string>
+    <string name="area_lavender_beds">ラベンダーベッド</string>
+    <string name="area_ul_dah">ウルダハ</string>
+    <string name="area_western_thanalan">西ザナラーン</string>
+    <string name="area_central_thanalan">中央ザナラーン</string>
+    <string name="area_eastern_thanalan">東ザナラーン</string>
+    <string name="area_southern_thanalan">南ザナラーン</string>
+    <string name="area_northern_thanalan">北ザナラーン</string>
+    <string name="area_the_goblet">ゴブレットビュート</string>
+    <string name="area_coerthas_central_highlands">クルザス中央高地</string>
+    <string name="area_mor_dhona">モードゥナ</string>
+</resources>

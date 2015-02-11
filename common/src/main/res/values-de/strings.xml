@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="no_area">Hide weather info</string>
+    <string name="area_limsa_lominsa">Limsa Lominsa</string>
+    <string name="area_middle_la_noscea">Zentrales La Noscea</string>
+    <string name="area_lower_la_noscea">Unteres La Noscea</string>
+    <string name="area_eastern_la_noscea">Östliches La Noscea</string>
+    <string name="area_western_la_noscea">Westliches La Noscea</string>
+    <string name="area_upper_la_noscea">Oberes La Noscea</string>
+    <string name="area_outer_la_noscea">Äußeres La Noscea</string>
+    <string name="area_wolves_den_pier">Wolfshöhlen-Pier</string>
+    <string name="area_mist">Dorf des Nebels</string>
+    <string name="area_gridania">Gridania</string>
+    <string name="area_central_shroud">Tiefer Wald</string>
+    <string name="area_east_shroud">Ostwald</string>
+    <string name="area_south_shroud">Südwald</string>
+    <string name="area_north_shroud">Nordwald</string>
+    <string name="area_lavender_beds">Lavendelbeete</string>
+    <string name="area_ul_dah">Ul\'dah</string>
+    <string name="area_western_thanalan">Westliches Thanalan</string>
+    <string name="area_central_thanalan">Zentrales Thanalan</string>
+    <string name="area_eastern_thanalan">Östliches Thanalan</string>
+    <string name="area_southern_thanalan">Südliches Thanalan</string>
+    <string name="area_northern_thanalan">Nördliches Thanalan</string>
+    <string name="area_the_goblet">Kelchkuppe</string>
+    <string name="area_coerthas_central_highlands">Zentrales Hochland von Coerthas</string>
+    <string name="area_mor_dhona">Mor Dhona</string>
+</resources>

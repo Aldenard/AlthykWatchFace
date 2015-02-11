@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="no_area">Hide weather info</string>
+    <string name="area_limsa_lominsa">Limsa Lominsa</string>
+    <string name="area_middle_la_noscea">Noscea centrale</string>
+    <string name="area_lower_la_noscea">Basse-Noscea</string>
+    <string name="area_eastern_la_noscea">Noscea orientale</string>
+    <string name="area_western_la_noscea">Noscea occidentale</string>
+    <string name="area_upper_la_noscea">Haute-Noscea</string>
+    <string name="area_outer_la_noscea">Noscea extérieure</string>
+    <string name="area_wolves_den_pier">Jetée de l\'Antre des loups</string>
+    <string name="area_mist">Brumée</string>
+    <string name="area_gridania">Gridania</string>
+    <string name="area_central_shroud">Forêt centrale</string>
+    <string name="area_east_shroud">Forêt de l\'est</string>
+    <string name="area_south_shroud">Forêt du sud</string>
+    <string name="area_north_shroud">Forêt du nord</string>
+    <string name="area_lavender_beds">Lavandière</string>
+    <string name="area_ul_dah">Ul\'dah</string>
+    <string name="area_western_thanalan">Thanalan occidental</string>
+    <string name="area_central_thanalan">Thanalan central</string>
+    <string name="area_eastern_thanalan">Thanalan oriental</string>
+    <string name="area_southern_thanalan">Thanalan méridional</string>
+    <string name="area_northern_thanalan">Thanalan septentrional</string>
+    <string name="area_the_goblet">La Coupe</string>
+    <string name="area_coerthas_central_highlands">Hautes terres du Coerthas central</string>
+    <string name="area_mor_dhona">Mor Dhona</string>
+</resources>

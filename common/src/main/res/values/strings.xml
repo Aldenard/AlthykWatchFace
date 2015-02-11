@@ -1,31 +1,31 @@
 <resources>
-    <string name="app_name">Common</string>
+    <string name="app_name" translatable="false">Common</string>
     <!-- Area -->
-    <string name="no_area">天候を表示しない</string>
-    <string name="area_limsa_lominsa">リムサ・ロミンサ</string>
-    <string name="area_middle_la_noscea">中央ラノシア</string>
-    <string name="area_lower_la_noscea">低地ラノシア</string>
-    <string name="area_eastern_la_noscea">東ラノシア</string>
-    <string name="area_western_la_noscea">西ラノシア</string>
-    <string name="area_upper_la_noscea">高地ラノシア</string>
-    <string name="area_outer_la_noscea">外地ラノシア</string>
-    <string name="area_wolves_den_pier">ウルヴズジェイル係船場</string>
-    <string name="area_mist">ミスト・ヴィレッジ</string>
-    <string name="area_gridania">グリダニア</string>
-    <string name="area_central_shroud">黒衣森：中央森林</string>
-    <string name="area_east_shroud">黒衣森：東部森林</string>
-    <string name="area_south_shroud">黒衣森：南部森林</string>
-    <string name="area_north_shroud">黒衣森：北部森林</string>
-    <string name="area_lavender_beds">ラベンダーベッド</string>
-    <string name="area_ul_dah">ウルダハ</string>
-    <string name="area_western_thanalan">西ザナラーン</string>
-    <string name="area_central_thanalan">中央ザナラーン</string>
-    <string name="area_eastern_thanalan">東ザナラーン</string>
-    <string name="area_southern_thanalan">南ザナラーン</string>
-    <string name="area_northern_thanalan">北ザナラーン</string>
-    <string name="area_the_goblet">ゴブレットビュート</string>
-    <string name="area_coerthas_central_highlands">クルザス中央高地</string>
-    <string name="area_mor_dhona">モードゥナ</string>
+    <string name="no_area">Hide weather info</string>
+    <string name="area_limsa_lominsa">Limsa Lominsa</string>
+    <string name="area_middle_la_noscea">Middle La Noscea</string>
+    <string name="area_lower_la_noscea">Lower La Noscea</string>
+    <string name="area_eastern_la_noscea">Eastern La Noscea</string>
+    <string name="area_western_la_noscea">Western La Noscea</string>
+    <string name="area_upper_la_noscea">Upper La Noscea</string>
+    <string name="area_outer_la_noscea">Outer La Noscea</string>
+    <string name="area_wolves_den_pier">Wolves\' Den Pier</string>
+    <string name="area_mist">Mist</string>
+    <string name="area_gridania">Gridania</string>
+    <string name="area_central_shroud">Central Shroud</string>
+    <string name="area_east_shroud">East Shroud</string>
+    <string name="area_south_shroud">South Shroud</string>
+    <string name="area_north_shroud">North Shroud</string>
+    <string name="area_lavender_beds">Lavender Beds</string>
+    <string name="area_ul_dah">Ul\'dah</string>
+    <string name="area_western_thanalan">Western Thanalan</string>
+    <string name="area_central_thanalan">Central Thanalan</string>
+    <string name="area_eastern_thanalan">Eastern Thanalan</string>
+    <string name="area_southern_thanalan">Southern Thanalan</string>
+    <string name="area_northern_thanalan">Northern Thanalan</string>
+    <string name="area_the_goblet">The Goblet</string>
+    <string name="area_coerthas_central_highlands">Coerthas Central Highlands</string>
+    <string name="area_mor_dhona">Mor Dhona</string>
     <string-array name="area_array">
         <item>@string/no_area</item>
         <item>@string/area_limsa_lominsa</item>
