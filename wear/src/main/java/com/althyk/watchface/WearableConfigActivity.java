@@ -184,6 +184,8 @@ public class WearableConfigActivity  extends Activity implements
         /** The duration of the expand/shrink animation. */
         private static final int ANIMATION_DURATION_MS = 150;
 
+        private static final float SHRINK_ICON_SCALE = .7f;
+        private static final float EXPAND_ICON_SCALE = 1f;
         private static final float SHRINK_LABEL_ALPHA = .5f;
         private static final float EXPAND_LABEL_ALPHA = 1f;
 
@@ -191,9 +193,13 @@ public class WearableConfigActivity  extends Activity implements
         private final TextView mLabel;
         private final CircledImageView mIcon;
 
+        private final ObjectAnimator mExpandIconXAnimator;
+        private final ObjectAnimator mExpandIconYAnimator;
         private final ObjectAnimator mExpandLabelAnimator;
         private final AnimatorSet mExpandAnimator;
 
+        private final ObjectAnimator mShrinkIconXAnimator;
+        private final ObjectAnimator mShrinkIconYAnimator;
         private final ObjectAnimator mShrinkLabelAnimator;
         private final AnimatorSet mShrinkAnimator;
 
@@ -205,15 +211,25 @@ public class WearableConfigActivity  extends Activity implements
             mLabel = (TextView) findViewById(R.id.label);
             mIcon = (CircledImageView) findViewById(R.id.icon);
 
+            mShrinkIconXAnimator = ObjectAnimator.ofFloat(mIcon, "scaleX",
+                    EXPAND_ICON_SCALE, SHRINK_ICON_SCALE);
+            mShrinkIconYAnimator = ObjectAnimator.ofFloat(mIcon, "scaleY",
+                    EXPAND_ICON_SCALE, SHRINK_ICON_SCALE);
             mShrinkLabelAnimator = ObjectAnimator.ofFloat(mLabel, "alpha",
                     EXPAND_LABEL_ALPHA, SHRINK_LABEL_ALPHA);
             mShrinkAnimator = new AnimatorSet().setDuration(ANIMATION_DURATION_MS);
-            mShrinkAnimator.play(mShrinkLabelAnimator);
+            mShrinkAnimator.playTogether(mShrinkIconXAnimator, mShrinkIconYAnimator,
+                    mShrinkLabelAnimator);
 
+            mExpandIconXAnimator = ObjectAnimator.ofFloat(mIcon, "scaleX",
+                    SHRINK_ICON_SCALE, EXPAND_ICON_SCALE);
+            mExpandIconYAnimator = ObjectAnimator.ofFloat(mIcon, "scaleY",
+                    SHRINK_ICON_SCALE, EXPAND_ICON_SCALE);
             mExpandLabelAnimator = ObjectAnimator.ofFloat(mLabel, "alpha",
                     SHRINK_LABEL_ALPHA, EXPAND_LABEL_ALPHA);
             mExpandAnimator = new AnimatorSet().setDuration(ANIMATION_DURATION_MS);
-            mExpandAnimator.play(mExpandLabelAnimator);
+            mExpandAnimator.playTogether(mExpandIconXAnimator, mExpandIconYAnimator,
+                    mExpandLabelAnimator);
         }
 
         @Override
@@ -221,11 +237,15 @@ public class WearableConfigActivity  extends Activity implements
             if (animate) {
                 mShrinkAnimator.cancel();
                 if (!mExpandAnimator.isRunning()) {
+                    mExpandIconXAnimator.setFloatValues(mIcon.getScaleX(), EXPAND_ICON_SCALE);
+                    mExpandIconYAnimator.setFloatValues(mIcon.getScaleY(), EXPAND_ICON_SCALE);
                     mExpandLabelAnimator.setFloatValues(mLabel.getAlpha(), EXPAND_LABEL_ALPHA);
                     mExpandAnimator.start();
                 }
             } else {
                 mExpandAnimator.cancel();
+                mIcon.setScaleX(EXPAND_ICON_SCALE);
+                mIcon.setScaleY(EXPAND_ICON_SCALE);
                 mLabel.setAlpha(EXPAND_LABEL_ALPHA);
             }
         }
@@ -235,11 +255,15 @@ public class WearableConfigActivity  extends Activity implements
             if (animate) {
                 mExpandAnimator.cancel();
                 if (!mShrinkAnimator.isRunning()) {
+                    mShrinkIconXAnimator.setFloatValues(mIcon.getScaleX(), SHRINK_ICON_SCALE);
+                    mShrinkIconYAnimator.setFloatValues(mIcon.getScaleY(), SHRINK_ICON_SCALE);
                     mShrinkLabelAnimator.setFloatValues(mLabel.getAlpha(), SHRINK_LABEL_ALPHA);
                     mShrinkAnimator.start();
                 }
             } else {
                 mShrinkAnimator.cancel();
+                mIcon.setScaleX(SHRINK_ICON_SCALE);
+                mIcon.setScaleY(SHRINK_ICON_SCALE);
                 mLabel.setAlpha(SHRINK_LABEL_ALPHA);
             }
         }
