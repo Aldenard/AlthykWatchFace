@@ -271,9 +271,8 @@ public class WearableConfigActivity  extends Activity implements
         private void setArea(String label, int areaId) {
             mAreaId = areaId;
             mLabel.setText(label);
-            mIcon.setVisibility(View.VISIBLE);
             if (areaId == 0) {
-                mIcon.setVisibility(View.GONE);
+                mIcon.setImageResource(R.drawable.no_weather);
             } else if (1 <= areaId && areaId <= 9) {
                 mIcon.setImageResource(R.drawable.limsa_lominsa_crest);
             } else if (10 <= areaId && areaId <= 15) {
