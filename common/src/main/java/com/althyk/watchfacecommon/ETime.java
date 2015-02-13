@@ -1,7 +1,5 @@
 package com.althyk.watchfacecommon;
 
-import java.util.concurrent.TimeUnit;
-
 public class ETime {
     private static final String TAG = "ETime";
 
