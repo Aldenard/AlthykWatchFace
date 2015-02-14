@@ -83,7 +83,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         /* weather data */
         int mWeatherArea = 4;
         boolean mGotFullData = false;
-        String mLastFetchedStartId;
+        String mLastFetchedStartId = "";
         HashMap<String, Bitmap> mWeatherHashMap = new HashMap<>();
 
         /* device feature */
@@ -561,7 +561,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 mGotFullData = true;
                 mLastFetchedStartId = new ETime().setToNow().generateStartET().getTimeId();
                 // stop fetch request
-                mUpdateTimeHandler.removeMessages(MSG_REQUEST_FETCH);
+                updateFetchRequest();
             } else {
                 mGotFullData = false;
             }
