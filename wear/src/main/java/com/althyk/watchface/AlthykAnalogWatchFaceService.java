@@ -81,9 +81,9 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         Time mTime;
 
         /* weather data */
-        int mWeatherArea = 4;
+        int mWeatherArea = 0;
+        long mLastFetchedTime = 0;
         boolean mGotFullData = false;
-        String mLastFetchedStartId = "";
         HashMap<String, Bitmap> mWeatherHashMap = new HashMap<>();
 
         /* device feature */
@@ -324,6 +324,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             // as whether we're visible), so we may need to start or stop the timer.
             updateTimer();
             updateAnimation();
+            updateFetchRequest();
         }
 
         @Override
@@ -557,13 +558,10 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 }
             }
 
-            if (weatherList.size() == 24 * 5) {
-                mGotFullData = true;
-                mLastFetchedStartId = new ETime().setToNow().generateStartET().getTimeId();
-                // stop fetch request
+            mLastFetchedTime = System.currentTimeMillis();
+            mGotFullData = weatherList.size() == 24 * 5;
+            if (mGotFullData) {
                 updateFetchRequest();
-            } else {
-                mGotFullData = false;
             }
 
             invalidate();
@@ -579,16 +577,20 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
 
         private void updateFetchRequest () {
             mUpdateTimeHandler.removeMessages(MSG_REQUEST_FETCH);
+            if (!shouldTimerBeRunning()) {
+                return;
+            }
+
+            long timeMs = System.currentTimeMillis();
             if (mGotFullData &&
-                mLastFetchedStartId.equals(new ETime().setToNow().generateStartET().getTimeId())) {
+                    mLastFetchedTime / WEATHER_UPDATE_RATE_MS == timeMs / WEATHER_UPDATE_RATE_MS) {
                 // next weather update
-                long timeMs = System.currentTimeMillis();
                 long delayMs = WEATHER_UPDATE_RATE_MS - (timeMs % WEATHER_UPDATE_RATE_MS);
                 mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_REQUEST_FETCH, delayMs);
             } else {
                 // next 1min
-                long timeMs = System.currentTimeMillis();
-                long delayMs = REQUEST_FETCH_RATE_MS - (timeMs % REQUEST_FETCH_RATE_MS);
+                long diffMs = timeMs - mLastFetchedTime;
+                long delayMs = diffMs > REQUEST_FETCH_RATE_MS ? 0 : REQUEST_FETCH_RATE_MS - diffMs;
                 mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_REQUEST_FETCH, delayMs);
             }
         }
