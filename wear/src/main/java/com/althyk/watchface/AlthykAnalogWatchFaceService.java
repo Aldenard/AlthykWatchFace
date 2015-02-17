@@ -151,6 +151,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                         }
                         break;
                     case MSG_REQUEST_FETCH:
+                        mLastFetchedTime = System.currentTimeMillis();
                         MessageSender.sendMessage(mGoogleApiClient,
                                 DataSyncUtil.PATH_REQUEST_FETCH, null);
                         if (shouldTimerBeRunning()) {
@@ -558,7 +559,6 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 }
             }
 
-            mLastFetchedTime = System.currentTimeMillis();
             mGotFullData = weatherList.size() == 24 * 5;
             if (mGotFullData) {
                 updateFetchRequest();
