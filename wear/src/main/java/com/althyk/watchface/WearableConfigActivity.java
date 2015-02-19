@@ -37,7 +37,7 @@ public class WearableConfigActivity  extends Activity implements
         setContentView(R.layout.activity_weather_config);
 
         mHeader = (TextView) findViewById(R.id.header);
-        WearableListView listView = (WearableListView) findViewById(R.id.weather_picker);
+        final WearableListView listView = (WearableListView) findViewById(R.id.weather_picker);
         BoxInsetLayout content = (BoxInsetLayout) findViewById(R.id.content);
         // BoxInsetLayout adds padding by default on round devices. Add some on square devices.
         content.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
@@ -68,6 +68,18 @@ public class WearableConfigActivity  extends Activity implements
                         if (Log.isLoggable(TAG, Log.DEBUG)) {
                             Log.d(TAG, "onConnected: " + connectionHint);
                         }
+
+                        // scroll to selected area
+                        DataMapUtil.fetchDataMap(mGoogleApiClient, DataSyncUtil.PATH_DATA_AREA,
+                                new DataMapUtil.FetchDataMapCallback() {
+                                    @Override
+                                    public void onDataMapFetched(DataMap config) {
+                                        int areaId = config.getInt(DataSyncUtil.KEY_WEATHER_AREA, -1);
+                                        if (areaId != -1) {
+                                            listView.scrollToPosition(areaId);
+                                        }
+                                    }
+                                });
                     }
 
                     @Override
