@@ -82,6 +82,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
 
         /* weather data */
         int mWeatherArea = 0;
+        String[] mWeatherAreaNames;
         long mLastFetchedTime = 0;
         boolean mGotFullData = false;
         HashMap<String, Bitmap> mWeatherHashMap = new HashMap<>();
@@ -101,6 +102,8 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         Paint mCircleDimPaint;
         Paint mCircleDimInvPaint;
         Paint mTextPaint = new Paint();
+        Paint mWeatherAreaNameBgPaint;
+        Paint mWeatherAreaNamePaint = new Paint();
 
         Paint mWeatherPaint;
 
@@ -263,6 +266,18 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             mWeatherPaint = new Paint();
             mWeatherPaint.setFilterBitmap(true);
 
+            mWeatherAreaNameBgPaint = new Paint();
+            mWeatherAreaNameBgPaint.setARGB(255, 0, 0, 0);
+            mWeatherAreaNameBgPaint.setAntiAlias(true);
+            mWeatherAreaNameBgPaint.setStyle(Paint.Style.FILL);
+
+            mWeatherAreaNamePaint.setARGB(255, 255, 255, 255);
+            mWeatherAreaNamePaint.setTypeface(NORMAL_TYPEFACE);
+            mWeatherAreaNamePaint.setAntiAlias(true);
+            mWeatherAreaNamePaint.setTextSize(25f);
+
+            mWeatherAreaNames = getResources().getStringArray(R.array.area_array);
+
             /* allocate an object to hold the time*/
             mTime = new Time();
         }
@@ -317,6 +332,8 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 mCircleDimPaint.setAntiAlias(antiAlias);
                 mCircleDimInvPaint.setAntiAlias(antiAlias);
                 mWeatherPaint.setFilterBitmap(antiAlias);
+                mWeatherAreaNameBgPaint.setAntiAlias(antiAlias);
+                mWeatherAreaNamePaint.setAntiAlias(antiAlias);
             }
 
             invalidate();
@@ -465,6 +482,30 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                         sweepDegree, 360f - sweepDegree, false, mCircleDimInvPaint);
                 canvas.restore();
             }
+
+            // draw area name
+            if (shouldTimerBeRunning() && mWeatherArea > 0 && mAnimationValue < 1f) {
+                String areaName = mWeatherAreaNames[mWeatherArea];
+                float textWidth = mWeatherAreaNamePaint.measureText(areaName);
+                float posX = centerX - textWidth / 2f;
+                float posY = height * 2 / 3f;
+
+                Paint.FontMetrics fm = new Paint.FontMetrics();
+                mWeatherAreaNamePaint.getFontMetrics(fm);
+                float margin = 5;
+
+                int alpha;
+                if (mAnimationValue > 0.5f) {
+                    alpha = Math.round(255 * mAnimationValue);
+                } else {
+                    alpha = Math.round(255 * (1f - mAnimationValue));
+                }
+                
+                mWeatherAreaNameBgPaint.setAlpha(alpha);
+                mWeatherAreaNamePaint.setAlpha(alpha);
+                canvas.drawRect(0, posY + fm.top - margin, width, posY + fm.bottom + margin, mWeatherAreaNameBgPaint);
+                canvas.drawText(areaName, posX, posY, mWeatherAreaNamePaint);
+            }
         }
 
         @Override
@@ -568,8 +609,8 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         }
 
         private void updateArea(DataMap dataMap) {
-            int areaId = dataMap.getInt(DataSyncUtil.KEY_WEATHER_AREA);
-            if (areaId > -1) {
+            int areaId = dataMap.getInt(DataSyncUtil.KEY_WEATHER_AREA, -1);
+            if (areaId != -1) {
                 mWeatherArea = areaId;
                 updateWeather(null);
             }
