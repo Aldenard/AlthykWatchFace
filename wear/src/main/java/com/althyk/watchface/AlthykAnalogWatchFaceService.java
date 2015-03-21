@@ -52,6 +52,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = TimeUnit.SECONDS.toMillis(1);
     private static final long ANIMATION_DURATION = 500;
+    private static final long ANIMATION_DURATION_FOR_NAME = 2000;
     private static final long ANIMATION_UPDATE_RATE = TimeUnit.SECONDS.toMillis(1) / 30; // 30fps
     private static final long REQUEST_FETCH_RATE_MS = TimeUnit.MINUTES.toMillis(1);
     private static final long WEATHER_UPDATE_RATE_MS = 70 * 60 * 1000 / 3; // = 8 et hour
@@ -74,7 +75,8 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
         static final int MSG_UPDATE_TIME = 0;
         static final int MSG_UPDATE_ANIMATION = 1;
-        static final int MSG_REQUEST_FETCH = 2;
+        static final int MSG_UPDATE_ANIMATION_FOR_NAME = 2;
+        static final int MSG_REQUEST_FETCH = 3;
 
         static final int WEATHER_ICON_SIZE = 32;
 
@@ -121,6 +123,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         /* animation */
         long mAnimationStart;
         float mAnimationValue = 1f;
+        float mAnimationValueForName = 1f;
 
         /** Handler to update the time once a second in interactive mode. */
         final Handler mUpdateTimeHandler = new Handler() {
@@ -151,6 +154,23 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                             }
                         } else {
                             mAnimationValue = 1f;
+                        }
+                        break;
+                    case MSG_UPDATE_ANIMATION_FOR_NAME:
+                        invalidate();
+                        if (shouldTimerBeRunning()) {
+                            long diffMs = System.currentTimeMillis() - mAnimationStart;
+                            if (diffMs < ANIMATION_DURATION_FOR_NAME) {
+                                long delayMs = ANIMATION_UPDATE_RATE -
+                                        diffMs % ANIMATION_UPDATE_RATE;
+                                float t = (float) diffMs / ANIMATION_DURATION_FOR_NAME;
+                                mAnimationValueForName = t;
+                                mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_ANIMATION_FOR_NAME, delayMs);
+                            } else {
+                                mAnimationValueForName = 1f;
+                            }
+                        } else {
+                            mAnimationValueForName = 1f;
                         }
                         break;
                     case MSG_REQUEST_FETCH:
@@ -286,6 +306,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
         public void onDestroy() {
             mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
             mUpdateTimeHandler.removeMessages(MSG_UPDATE_ANIMATION);
+            mUpdateTimeHandler.removeMessages(MSG_UPDATE_ANIMATION_FOR_NAME);
             mUpdateTimeHandler.removeMessages(MSG_REQUEST_FETCH);
             unregisterReceiver();
             super.onDestroy();
@@ -484,7 +505,7 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
             }
 
             // draw area name
-            if (shouldTimerBeRunning() && mWeatherArea > 0 && mAnimationValue < 1f) {
+            if (shouldTimerBeRunning() && mWeatherArea > 0 && mAnimationValueForName < 1f) {
                 String areaName = mWeatherAreaNames[mWeatherArea];
                 float textWidth = mWeatherAreaNamePaint.measureText(areaName);
                 float posX = centerX - textWidth / 2f;
@@ -495,10 +516,10 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 float margin = 5;
 
                 int alpha;
-                if (mAnimationValue > 0.5f) {
-                    alpha = Math.round(255 * mAnimationValue);
+                if (mAnimationValueForName < 0.5f) {
+                    alpha = 255;
                 } else {
-                    alpha = Math.round(255 * (1f - mAnimationValue));
+                    alpha = Math.round(255 * (1f - mAnimationValueForName) / 0.5f);
                 }
                 
                 mWeatherAreaNameBgPaint.setAlpha(alpha);
@@ -638,11 +659,15 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
 
         private void updateAnimation() {
             mAnimationValue = 1f;
+            mAnimationValueForName = 1f;
             mUpdateTimeHandler.removeMessages(MSG_UPDATE_ANIMATION);
+            mUpdateTimeHandler.removeMessages(MSG_UPDATE_ANIMATION_FOR_NAME);
             if (shouldTimerBeRunning()) {
                 mAnimationStart = System.currentTimeMillis();
                 mAnimationValue = 0f;
+                mAnimationValueForName = 0f;
                 mUpdateTimeHandler.sendEmptyMessage(MSG_UPDATE_ANIMATION);
+                mUpdateTimeHandler.sendEmptyMessage(MSG_UPDATE_ANIMATION_FOR_NAME);
             }
         }
 
