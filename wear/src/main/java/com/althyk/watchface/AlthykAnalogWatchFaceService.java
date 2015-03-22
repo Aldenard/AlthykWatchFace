@@ -516,10 +516,12 @@ public class AlthykAnalogWatchFaceService  extends CanvasWatchFaceService {
                 float margin = 5;
 
                 int alpha;
-                if (mAnimationValueForName < 0.5f) {
+                if (mAnimationValueForName < 0.2f) {
+                    alpha = Math.round(255 * mAnimationValueForName / 0.2f);
+                } else if (mAnimationValueForName < 0.7f) {
                     alpha = 255;
                 } else {
-                    alpha = Math.round(255 * (1f - mAnimationValueForName) / 0.5f);
+                    alpha = Math.round(255 * (1f - mAnimationValueForName) / 0.3f);
                 }
                 
                 mWeatherAreaNameBgPaint.setAlpha(alpha);
